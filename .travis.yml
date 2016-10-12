@@ -1,0 +1,23 @@
+language: java
+sudo: false
+
+cache:
+  directories:
+  - $HOME/.m2
+
+jdk:
+- oraclejdk8
+
+os:
+- linux
+
+before_deploy: export DEPLOY_JAR=$(ls target/infinispan-jmemcached-*.jar)
+#deploy:
+#  provider: releases
+#  skip_cleanup: true
+#  api_key:
+#    secure: abc123
+#  file: "${DEPLOY_JAR}"
+#  on:
+#    repo: zalora/infinispan-jmemcached
+#    tags: true
