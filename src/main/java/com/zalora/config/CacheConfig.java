@@ -45,6 +45,10 @@ public class CacheConfig {
 
         if (!isDev()) {
             gcb.transport().addProperty("configurationFile", "jgroups.config.xml");
+
+            System.setProperty("jgroups.s3.access_key", System.getenv("S3_ACCESS_KEY"));
+            System.setProperty("jgroups.s3.secret_access_key", System.getenv("S3_SECRET_KEY"));
+            System.setProperty("jgroups.s3.bucket", System.getenv("S3_BUCKET"));
         }
 
         globalConfiguration = gcb.build();

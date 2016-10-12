@@ -1,18 +1,4 @@
 ---
 spring:
   application:
-    name: jworker
-
----
-spring:
-  profiles: live
-  cloud:
-    config:
-      uri: http://config.core.zalora.io
-
----
-spring:
-  profiles: dev
-  cloud:
-    config:
-      uri: http://localhost:8888
+    name: infinispan-jmemcached
