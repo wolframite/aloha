@@ -3,21 +3,20 @@ sudo: false
 
 cache:
   directories:
-  - $HOME/.m2
+  - "$HOME/.m2"
 
 jdk:
-- oraclejdk8
-
+  - oraclejdk8
 os:
-- linux
+  - linux
 
 before_deploy: export DEPLOY_JAR=$(ls target/infinispan-jmemcached-*.jar)
-#deploy:
-#  provider: releases
-#  skip_cleanup: true
-#  api_key:
-#    secure: abc123
-#  file: "${DEPLOY_JAR}"
-#  on:
-#    repo: zalora/infinispan-jmemcached
-#    tags: true
+deploy:
+  provider: releases
+  api_key:
+    secure: B5SbtjIuYoZmbV3xORuO2JMML7O3872cPW4bGT1u5+gwdPR3VhYCl65w9LKP8u79CKU2drvM1MQQlynNAE4BaAzrwUtZ8hUmTIwmUipHdMDBJwrN+UxbcM9DCE88BqUgCsjidv4q//9hIbxihbit7KndPVFCAG17+e/pjHVtmegzEdlR6OgGi5qUWiOlhOai3zWIks3sFIWa4V0NtEcQAxrX+YdcyczP85a3pyBPpGrvEtMiCwyUzvA3kAiOSxn5P9uLEH9/vySs0aw4IGZao+9I111plYDEL4DxPTkwK1aHDgaIetgFtCPGjjsGwkMlMI5TwWXzPYVidYUgmHcAj0iFkv18xNnykDdsPJP8VWfj8k2CifMi0FJN+nIeJFqaYg0+xWNX48xhPrIupVbOD7bFVENV3MgSuxAuHz3X7paqV7NBVHQVjHbqE3hnQaclPxl7wSQL4muVjhuuF43O3d4v6epZ69JS5zdbQuFiFlbLussR6ATyHvIGFhBe251aejewWcC49rXM7ZEibQvCb0kYr4qvc7H4tLwPGZiLOpPbNA2IBOssyXyWhN4LEEgV0f0UGIpydSTxCO6CJQ0TTuikFyQoWfDzK8hIDqjkhmOgELPILfDNNJ3xOCz8MZ2d0BKJfsIt2UHRBfkUQ1j5NsNM3m5Z+CFWdee8Ryb3k8I=
+  file: "${DEPLOY_JAR}"
+  on:
+    repo: zalora/infinispan-jmemcached
+    tags: true
+

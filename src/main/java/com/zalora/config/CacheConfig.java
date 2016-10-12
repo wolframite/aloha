@@ -53,7 +53,6 @@ public class CacheConfig {
     }
 
     private boolean isDev() {
-        setS3Credentials();
         return env.acceptsProfiles("dev", "default");
     }
 
