@@ -1,12 +1,10 @@
 package com.zalora.manager;
 
-import com.thimbleware.jmemcached.CacheImpl;
-import com.zalora.storage.InfiniBridge;
 import javax.annotation.PostConstruct;
-
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+import com.zalora.storage.InfiniBridge;
 import com.zalora.config.MemcachedConfig;
+import com.thimbleware.jmemcached.CacheImpl;
 import org.springframework.stereotype.Component;
 import com.thimbleware.jmemcached.MemCacheDaemon;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
-@Slf4j
 @Component
 public class MemcachedManager {
 
@@ -39,7 +36,7 @@ public class MemcachedManager {
         daemon.setAddr(memcachedConfig.getInetSocketAddress());
         daemon.setIdleTime(memcachedConfig.getIdleTime());
         daemon.setVerbose(memcachedConfig.isVerbose());
-        daemon.setCache(new CacheImpl(memcachedConfig.getStorage()));
+        daemon.setCache(new CacheImpl(infiniBridge));
         daemon.start();
     }
 

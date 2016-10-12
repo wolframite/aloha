@@ -7,4 +7,4 @@ memcached:
   host: localhost
   port: 11211
   idleTime: 5000
-  verbose: true
+  verbose: false

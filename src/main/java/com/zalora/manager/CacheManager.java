@@ -3,6 +3,7 @@ package com.zalora.manager;
 import lombok.Getter;
 import org.infinispan.Cache;
 import org.infinispan.manager.*;
+import com.thimbleware.jmemcached.*;
 import com.zalora.config.CacheConfig;
 import javax.annotation.PostConstruct;
 import org.springframework.util.Assert;
@@ -18,7 +19,7 @@ public class CacheManager {
     private CacheConfig cacheConfig;
 
     @Getter
-    private EmbeddedCacheManager cacheManager;
+    private EmbeddedCacheManager embeddedCacheManager;
 
     @Autowired
     public CacheManager(CacheConfig cacheConfig) {
@@ -28,11 +29,11 @@ public class CacheManager {
 
     @PostConstruct
     public void init() {
-        cacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration(), cacheConfig.getConfiguration());
-        cacheManager.startCaches(cacheConfig.getCacheName());
+        embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration(), cacheConfig.getConfiguration());
+        embeddedCacheManager.startCaches(cacheConfig.getCacheName());
     }
 
-    public Cache<String, String> getMainStorageCache() {
-        return cacheManager.getCache(cacheConfig.getCacheName());
+    public Cache<Key, LocalCacheElement> getMainStorage() {
+        return embeddedCacheManager.getCache(cacheConfig.getCacheName());
     }
 }
