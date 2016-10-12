@@ -1,7 +1,7 @@
 ---
 infinispan:
-  cache.name: mc
-  cluster.name: infinispan-cluster
+  cache.name: memcachedCache
+  cluster.name: clustered
 
 memcached:
   host: 0.0.0.0

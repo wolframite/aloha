@@ -35,14 +35,14 @@ public class CacheConfig {
     public void init() { configure(); }
 
     private final void configure() {
+        GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
+        gcb.transport()
+                .defaultTransport()
+                .clusterName(clusterName);
+
         configuration = new ConfigurationBuilder()
             .clustering().cacheMode(CacheMode.REPL_ASYNC)
             .build();
-
-        GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
-        gcb.transport()
-            .defaultTransport()
-            .clusterName(clusterName);
 
         if (!isDev()) {
             setS3Credentials();
