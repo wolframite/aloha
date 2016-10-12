@@ -2,6 +2,7 @@ package com.zalora.config;
 
 import lombok.Getter;
 import javax.annotation.PostConstruct;
+import org.springframework.util.Assert;
 import org.infinispan.configuration.cache.*;
 import org.infinispan.configuration.global.*;
 import org.springframework.core.env.Environment;
@@ -44,17 +45,29 @@ public class CacheConfig {
             .clusterName(clusterName);
 
         if (!isDev()) {
+            setS3Credentials();
             gcb.transport().addProperty("configurationFile", "jgroups.config.xml");
-
-            System.setProperty("jgroups.s3.access_key", System.getenv("S3_ACCESS_KEY"));
-            System.setProperty("jgroups.s3.secret_access_key", System.getenv("S3_SECRET_KEY"));
-            System.setProperty("jgroups.s3.bucket", System.getenv("S3_BUCKET"));
         }
 
         globalConfiguration = gcb.build();
     }
 
     private boolean isDev() {
+        setS3Credentials();
         return env.acceptsProfiles("dev", "default");
+    }
+
+    private void setS3Credentials() {
+        String accessKey = System.getenv("S3_ACCESS_KEY");
+        String secretAccessKey = System.getenv("S3_SECRET_ACCESS_KEY");
+        String bucket = System.getenv("S3_BUCKET");
+
+        Assert.notNull(accessKey, "Access Key is not set (S3_ACCESS_KEY)");
+        Assert.notNull(secretAccessKey, "Secret Access Key is not set (S3_SECRET_ACCESS_KEY)");
+        Assert.notNull(bucket, "Bucket is not set (S3_BUCKET)");
+
+        System.setProperty("jgroups.s3.access_key", accessKey);
+        System.setProperty("jgroups.s3.secret_access_key", secretAccessKey);
+        System.setProperty("jgroups.s3.bucket", bucket);
     }
 }
