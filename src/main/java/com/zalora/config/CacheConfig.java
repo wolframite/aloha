@@ -46,6 +46,13 @@ public class CacheConfig {
 
         if (!isDev()) {
             setS3Credentials();
+
+            // Overwrite clustering listen address
+            String listenAddress = System.getenv("JGROUPS_INET_ADDRESS");
+            if (listenAddress != null) {
+                System.setProperty("jgroups.bind_addr", listenAddress);
+            }
+
             gcb.transport().addProperty("configurationFile", "jgroups.config.xml");
         }
 

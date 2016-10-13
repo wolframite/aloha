@@ -1,6 +1,6 @@
 <config>
     <TCP bind_port="7800"
-         bind_addr="0.0.0.0"
+         bind_addr="${jgroups.bind_addr:localhost}"
          enable_diagnostics="false"
          thread_naming_pattern="pl"
          send_buf_size="640k"

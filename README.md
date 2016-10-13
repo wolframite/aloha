@@ -7,9 +7,10 @@ with jMemcached, which is reliable and fast.
 
 For live mode (spring profile == 'dev') export the following environment variables:
 
-- S3_PROFILES_ACTIVE=live
+- SPRING_PROFILES_ACTIVE=live
 - S3_ACCESS_KEY=
 - S3_SECRET_ACCESS_KEY=
 - S3_BUCKET=
+- JGROUPS_INET_ADDRESS=
 
 In development mode (spring profile != ('dev' || 'default') no S3 buckets are used.
