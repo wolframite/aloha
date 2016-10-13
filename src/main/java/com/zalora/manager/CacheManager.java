@@ -29,7 +29,8 @@ public class CacheManager {
 
     @PostConstruct
     public void init() {
-        embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration(), cacheConfig.getConfiguration());
+        embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
+        embeddedCacheManager.defineConfiguration(cacheConfig.getCacheName(), cacheConfig.getConfiguration());
         embeddedCacheManager.startCaches(cacheConfig.getCacheName());
     }
 
