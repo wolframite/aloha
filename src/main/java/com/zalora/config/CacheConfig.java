@@ -37,8 +37,8 @@ public class CacheConfig {
     private final void configure() {
         GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
         gcb.transport()
-                .defaultTransport()
-                .clusterName(clusterName);
+            .defaultTransport()
+            .clusterName(clusterName);
 
         configuration = new ConfigurationBuilder()
             .clustering().cacheMode(CacheMode.DIST_ASYNC)
