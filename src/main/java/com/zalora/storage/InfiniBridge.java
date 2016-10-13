@@ -132,12 +132,28 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public Collection<LocalCacheElement> values() {
+        List valueList = new ArrayList<LocalCacheElement>();
+        for(MemcachedItem memcachedItem : infinispanCache.values()) {
+            valueList.add(memcachedItem.toLocalCacheElement());
+        }
+
         return null;
     }
 
     @Override
     public Set<Entry<Key, LocalCacheElement>> entrySet() {
-        return null;
+        Set<Entry<Key, LocalCacheElement>> jMemcachedEntrySet = new HashSet<>();
+
+        for (Entry<String, MemcachedItem> entry : infinispanCache.entrySet()) {
+            jMemcachedEntrySet.add(
+                new HashMap.SimpleEntry<Key, LocalCacheElement>(
+                    new Key(ChannelBuffers.copiedBuffer(entry.getKey().getBytes(UTF_8))),
+                    entry.getValue().toLocalCacheElement()
+                )
+            );
+        }
+
+        return jMemcachedEntrySet;
     }
 
     @Override
