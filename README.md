@@ -1,4 +1,4 @@
-# Infinispan-jMemcached [![Build Status](https://travis-ci.com/zalora/infinispan-jmemcached.svg?token=xVdK7vmHNmWkzySFLTpU&branch=master)](https://travis-ci.com/zalora/infinispan-jmemcached)
+# Infinispan-jMemcached [![Build Status](https://travis-ci.org/zalora/infinispan-jmemcached.svg?branch=master)](https://travis-ci.org/zalora/infinispan-jmemcached)
 
 As the infinispan memcached-server has some buffer problem, which makes it unreliable, we replaced the memcached server
 with jMemcached, which is reliable and fast.
