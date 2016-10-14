@@ -8,3 +8,5 @@ memcached:
   port: 11211
   idleTime: 2000
   verbose: false
+
+logging.level.root: DEBUG
