@@ -1,7 +1,7 @@
 ---
 infinispan:
   cache.name: memcachedCache
-  cluster.name: clustered
+  cluster.name: ElGordo
 
 memcached:
   host: 0.0.0.0
