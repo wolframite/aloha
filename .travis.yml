@@ -1,22 +1,20 @@
 language: java
 sudo: false
-
 cache:
   directories:
   - "$HOME/.m2"
 
 jdk:
   - oraclejdk8
+
 os:
   - linux
 
-before_deploy: export DEPLOY_JAR=$(ls target/infinispan-jmemcached-*.jar)
 deploy:
   provider: releases
   api_key:
-    secure: B5SbtjIuYoZmbV3xORuO2JMML7O3872cPW4bGT1u5+gwdPR3VhYCl65w9LKP8u79CKU2drvM1MQQlynNAE4BaAzrwUtZ8hUmTIwmUipHdMDBJwrN+UxbcM9DCE88BqUgCsjidv4q//9hIbxihbit7KndPVFCAG17+e/pjHVtmegzEdlR6OgGi5qUWiOlhOai3zWIks3sFIWa4V0NtEcQAxrX+YdcyczP85a3pyBPpGrvEtMiCwyUzvA3kAiOSxn5P9uLEH9/vySs0aw4IGZao+9I111plYDEL4DxPTkwK1aHDgaIetgFtCPGjjsGwkMlMI5TwWXzPYVidYUgmHcAj0iFkv18xNnykDdsPJP8VWfj8k2CifMi0FJN+nIeJFqaYg0+xWNX48xhPrIupVbOD7bFVENV3MgSuxAuHz3X7paqV7NBVHQVjHbqE3hnQaclPxl7wSQL4muVjhuuF43O3d4v6epZ69JS5zdbQuFiFlbLussR6ATyHvIGFhBe251aejewWcC49rXM7ZEibQvCb0kYr4qvc7H4tLwPGZiLOpPbNA2IBOssyXyWhN4LEEgV0f0UGIpydSTxCO6CJQ0TTuikFyQoWfDzK8hIDqjkhmOgELPILfDNNJ3xOCz8MZ2d0BKJfsIt2UHRBfkUQ1j5NsNM3m5Z+CFWdee8Ryb3k8I=
+    secure: VNhVWrz31Z49AVDibT/x14DLLyNwB20BfuIK7uaZiVAlxeVoF29Knn1anBQZRu1krh5qGB0VG2hZFIz/jzOrVyW0vTH6T1HxrDaFQPwrMY+qmIZtBFl9GFm8lTldl/97GDGns72RX1y6Eu7yjrJVtrayNyYq6FIIIJPslWcdlnLiE8IuBwtzNhNikgVri7dtJLo7VEcdtMRsCsJJMaUwoDbCPCDzUho9qFxbEtYnI68QbEzmXc9uJafKV2Vz0YYV40rhQ/oTg+Q53TE9J4auNNPLMy0jetT1EshpxOYh2PNR5ZUvhnrMqJXaaY8zDr9mBi8Khgt6U2L86ycOOSnK8MNXE7p93Z7Gcv7vZk98KiBUn3YCAQ/zSsDovBp1knVRAoDOvSZzaCVRsXQLWhGQ1Q82fgiPffqFdlHf5mb4ZwzI7EAa3WxhhOHL4AAyzAJOclauLW2pRr04M/6wsUy2vLSYX4Y/zyuoFeBylJqnlcxmYpy5/A+Rr3triNCrY/WE7qNSxV6FRqURUnZLOEHKTxrmWOOwMvX5CGyhgB1MWcxvV0U5B4berLWvxPECOP+8AWULwHiQ8p6FniE85qloTzZUse5ur3/jRAgp/vq5Xt9wUfNVMWgDLn6PDEpyDtEIA5eUaNp8eiR3DjfjR7a2Xn+BbCflQGly8KyG8Bv1/RA=
   file: "${DEPLOY_JAR}"
   on:
     repo: zalora/infinispan-jmemcached
     tags: true
-
