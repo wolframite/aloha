@@ -41,7 +41,7 @@ public class CacheConfig {
             .clusterName(clusterName);
 
         configuration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.DIST_ASYNC)
+            .clustering().cacheMode(CacheMode.DIST_SYNC)
             .build();
 
         if (!isDev()) {
