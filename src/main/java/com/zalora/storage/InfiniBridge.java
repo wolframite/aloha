@@ -156,13 +156,19 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
         return jMemcachedEntrySet;
     }
 
+    /**
+     * Successful put operation has to return null here, because the JMemcached expects it
+     * https://github.com/callan/jmemcached/blob/44c9c9c0b054abacf5347b0fd8bdf7dfefe3987e/src/com/thimbleware/jmemcached/CacheImpl.java#L83
+     * @return null
+     */
     @Override
     public LocalCacheElement putIfAbsent(Key key, LocalCacheElement localCacheElement) {
-        MemcachedItem memcachedItem = infinispanCache.putIfAbsent(
+        infinispanCache.putIfAbsent(
             getKeyAsString(key),
             new MemcachedItem(localCacheElement)
         );
-        return localCacheElement;
+
+        return null;
     }
 
     @Override
