@@ -1,24 +1,22 @@
 package com.zalora.storage;
 
 import com.thimbleware.jmemcached.Key;
-import com.thimbleware.jmemcached.LocalCacheElement;
-
 import com.zalora.manager.CacheManager;
-import org.infinispan.AdvancedCache;
 import org.springframework.util.Assert;
 import org.springframework.stereotype.Component;
+import com.thimbleware.jmemcached.LocalCacheElement;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
 @Component
-public class SessionInfiniBridge extends AbstractInfiniBridge {
+public class ProductInfiniBridge extends AbstractInfiniBridge {
 
     @Autowired
-    public SessionInfiniBridge(CacheManager cacheManager) {
-        Assert.notNull(cacheManager.getSessionStorage(), "Session Infinispan Cache could not be loaded");
-        this.ispanCache = cacheManager.getSessionStorage();
+    public ProductInfiniBridge(CacheManager cacheManager) {
+        Assert.notNull(cacheManager.getProductStorage(), "Product-Infinispan Cache could not be loaded");
+        this.ispanCache = cacheManager.getProductStorage();
     }
 
     @Override

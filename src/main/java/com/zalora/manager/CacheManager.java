@@ -32,13 +32,8 @@ public class CacheManager {
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
 
         embeddedCacheManager.defineConfiguration(
-            cacheConfig.getStorageCacheName(),
-            cacheConfig.getStorageConfiguration()
-        );
-
-        embeddedCacheManager.defineConfiguration(
-            cacheConfig.getSessionCacheName(),
-            cacheConfig.getSessionConfiguration()
+            cacheConfig.getMainCacheName(),
+            cacheConfig.getMainConfiguration()
         );
 
         embeddedCacheManager.defineConfiguration(
@@ -46,15 +41,25 @@ public class CacheManager {
             cacheConfig.getProductConfiguration()
         );
 
-        embeddedCacheManager.startCaches(
-            cacheConfig.getStorageCacheName(),
+        embeddedCacheManager.defineConfiguration(
             cacheConfig.getSessionCacheName(),
-            cacheConfig.getProductCacheName()
+            cacheConfig.getSessionConfiguration()
+        );
+
+        embeddedCacheManager.startCaches(
+            cacheConfig.getMainCacheName(),
+            cacheConfig.getProductCacheName(),
+            cacheConfig.getSessionCacheName()
         );
     }
 
     public AdvancedCache<byte[], byte[]> getMainStorage() {
-        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getStorageCacheName());
+        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getMainCacheName());
+        return cache.getAdvancedCache();
+    }
+
+    public AdvancedCache<byte[], byte[]> getProductStorage() {
+        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
         return cache.getAdvancedCache();
     }
 
@@ -63,8 +68,4 @@ public class CacheManager {
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<byte[], byte[]> getProductStorage() {
-        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
-        return cache.getAdvancedCache();
-    }
 }

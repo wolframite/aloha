@@ -22,25 +22,25 @@ public class CacheConfig {
     private GlobalConfiguration globalConfiguration;
 
     @Getter
-    private Configuration storageConfiguration;
-
-    @Getter
-    private Configuration sessionConfiguration;
+    private Configuration mainConfiguration;
 
     @Getter
     private Configuration productConfiguration;
 
     @Getter
-    @Value("${infinispan.cache.storage.name}")
-    private String storageCacheName;
+    private Configuration sessionConfiguration;
 
     @Getter
-    @Value("${infinispan.cache.session.name}")
-    private String sessionCacheName;
+    @Value("${infinispan.cache.main.name}")
+    private String mainCacheName;
 
     @Getter
     @Value("${infinispan.cache.product.name}")
     private String productCacheName;
+
+    @Getter
+    @Value("${infinispan.cache.session.name}")
+    private String sessionCacheName;
 
     @Value("${infinispan.cluster.name}")
     private String clusterName;
@@ -68,16 +68,16 @@ public class CacheConfig {
 
         globalConfiguration = gcb.build();
 
-        storageConfiguration = new ConfigurationBuilder()
+        mainConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(CacheMode.DIST_ASYNC)
+            .build();
+
+        productConfiguration = new ConfigurationBuilder()
             .clustering().cacheMode(CacheMode.DIST_ASYNC)
             .build();
 
         sessionConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.DIST_SYNC)
-            .build();
-
-        productConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.REPL_ASYNC)
+            .clustering().cacheMode(CacheMode.REPL_SYNC)
             .build();
     }
 

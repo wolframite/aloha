@@ -16,8 +16,8 @@ public class MainInfiniBridge extends AbstractInfiniBridge {
 
     @Autowired
     public MainInfiniBridge(CacheManager cacheManager) {
-        Assert.notNull(cacheManager.getSessionStorage(), "Infinispan Cache could not be loaded");
-        this.ispanCache = cacheManager.getSessionStorage();
+        Assert.notNull(cacheManager.getMainStorage(), "Infinispan Cache could not be loaded");
+        this.ispanCache = cacheManager.getMainStorage();
     }
 
     @Override

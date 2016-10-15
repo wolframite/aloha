@@ -2,9 +2,9 @@
 infinispan:
   cluster.name: ElGordo
   cache:
-    storage.name: storage
-    session.name: session
+    main.name: main
     product.name: product
+    session.name: session
 
 memcached:
   host: 0.0.0.0
