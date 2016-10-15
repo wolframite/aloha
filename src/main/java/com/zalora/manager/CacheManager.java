@@ -3,6 +3,7 @@ package com.zalora.manager;
 import lombok.Getter;
 import org.infinispan.Cache;
 import org.infinispan.manager.*;
+import org.infinispan.AdvancedCache;
 import com.zalora.config.CacheConfig;
 import javax.annotation.PostConstruct;
 import org.springframework.util.Assert;
@@ -34,7 +35,8 @@ public class CacheManager {
         embeddedCacheManager.startCaches(cacheConfig.getCacheName());
     }
 
-    public Cache<String, MemcachedItem> getMainStorage() {
-        return embeddedCacheManager.getCache(cacheConfig.getCacheName());
+    public AdvancedCache<byte[], MemcachedItem> getMainStorage() {
+        Cache<byte[], MemcachedItem> cache = embeddedCacheManager.getCache(cacheConfig.getCacheName());
+        return cache.getAdvancedCache();
     }
 }

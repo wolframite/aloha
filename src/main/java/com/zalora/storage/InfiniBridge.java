@@ -2,12 +2,12 @@ package com.zalora.storage;
 
 import java.util.*;
 import java.io.IOException;
-import org.infinispan.Cache;
-import java.nio.charset.Charset;
+import java.util.stream.Collectors;
+import org.infinispan.AdvancedCache;
 import com.thimbleware.jmemcached.Key;
 import com.zalora.manager.CacheManager;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.springframework.util.Assert;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.springframework.stereotype.Component;
 import com.thimbleware.jmemcached.LocalCacheElement;
 import com.thimbleware.jmemcached.storage.CacheStorage;
@@ -20,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Component
 public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
-    private final Cache<String, MemcachedItem> infinispanCache;
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
+    private final AdvancedCache<byte[], MemcachedItem> infinispanCache;
 
     @Autowired
     public InfiniBridge(CacheManager cacheManager) {
@@ -61,18 +60,18 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public boolean containsKey(Object key) {
-        return infinispanCache.containsKey(getKeyAsString(key));
+        return infinispanCache.containsKey(getKeyAsByteArray(key));
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return infinispanCache.containsValue(new MemcachedItem((LocalCacheElement) value));
+        return infinispanCache.containsValue(new MemcachedItem(value));
     }
 
     @Override
     public LocalCacheElement get(Object key) {
-        String memcachedKey = getKeyAsString(key);
-        if (memcachedKey == null || memcachedKey == "") {
+        byte[] memcachedKey = getKeyAsByteArray(key);
+        if (memcachedKey == null || memcachedKey.length == 0) {
             return null;
         }
 
@@ -86,8 +85,8 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public LocalCacheElement put(Key key, LocalCacheElement localCacheElement) {
-        String memcachedKey = getKeyAsString(key);
-        if (memcachedKey == null || memcachedKey == "") {
+        byte[] memcachedKey = getKeyAsByteArray(key);
+        if (memcachedKey == null || memcachedKey.length == 0) {
             return null;
         }
 
@@ -97,16 +96,16 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public LocalCacheElement remove(Object key) {
-        infinispanCache.remove(getKeyAsString(key));
+        infinispanCache.remove(getKeyAsByteArray(key));
         return new LocalCacheElement((Key) key);
     }
 
     @Override
     public void putAll(Map<? extends Key, ? extends LocalCacheElement> map) {
-        Map<String, MemcachedItem> memcachedMap = new HashMap<>();
+        Map<byte[], MemcachedItem> memcachedMap = new HashMap<>();
         for (Entry<? extends Key, ? extends LocalCacheElement> entry : map.entrySet()) {
             memcachedMap.put(
-                entry.getKey().bytes.toString(UTF_8),
+                entry.getKey().bytes.array(),
                 new MemcachedItem(entry.getValue())
             );
         }
@@ -121,39 +120,30 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public Set<Key> keySet() {
-        Set<Key> jMemcachedKeySet = new HashSet<>();
-
-        for (String key : infinispanCache.keySet()) {
-            jMemcachedKeySet.add(new Key(ChannelBuffers.copiedBuffer(key.getBytes(UTF_8))));
-        }
-
-        return jMemcachedKeySet;
+        return infinispanCache.keySet()
+            .stream()
+            .map(key -> new Key(ChannelBuffers.copiedBuffer(key)))
+                .collect(Collectors.toSet());
     }
 
     @Override
     public Collection<LocalCacheElement> values() {
-        List valueList = new ArrayList<LocalCacheElement>();
-        for(MemcachedItem memcachedItem : infinispanCache.values()) {
-            valueList.add(memcachedItem.toLocalCacheElement());
-        }
-
-        return null;
+        return infinispanCache
+            .values()
+            .stream()
+            .map(MemcachedItem::toLocalCacheElement)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Set<Entry<Key, LocalCacheElement>> entrySet() {
-        Set<Entry<Key, LocalCacheElement>> jMemcachedEntrySet = new HashSet<>();
-
-        for (Entry<String, MemcachedItem> entry : infinispanCache.entrySet()) {
-            jMemcachedEntrySet.add(
-                new HashMap.SimpleEntry<Key, LocalCacheElement>(
-                    new Key(ChannelBuffers.copiedBuffer(entry.getKey().getBytes(UTF_8))),
-                    entry.getValue().toLocalCacheElement()
-                )
-            );
-        }
-
-        return jMemcachedEntrySet;
+        return infinispanCache
+            .entrySet()
+            .stream()
+            .map(entry -> new HashMap.SimpleEntry<>(
+                new Key(ChannelBuffers.copiedBuffer(entry.getKey())),
+                entry.getValue().toLocalCacheElement()
+            )).collect(Collectors.toSet());
     }
 
     /**
@@ -164,7 +154,7 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
     @Override
     public LocalCacheElement putIfAbsent(Key key, LocalCacheElement localCacheElement) {
         infinispanCache.putIfAbsent(
-            getKeyAsString(key),
+            getKeyAsByteArray(key),
             new MemcachedItem(localCacheElement)
         );
 
@@ -173,13 +163,13 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
     @Override
     public boolean remove(Object key, Object localCacheElement) {
-        return infinispanCache.remove(getKeyAsString(key), new MemcachedItem(localCacheElement));
+        return infinispanCache.remove(getKeyAsByteArray(key), new MemcachedItem(localCacheElement));
     }
 
     @Override
     public boolean replace(Key key, LocalCacheElement localCacheElement, LocalCacheElement v1) {
         return infinispanCache.replace(
-            getKeyAsString(key),
+            getKeyAsByteArray(key),
             new MemcachedItem(localCacheElement),
             new MemcachedItem(v1)
         );
@@ -188,14 +178,14 @@ public class InfiniBridge implements CacheStorage<Key, LocalCacheElement> {
     @Override
     public LocalCacheElement replace(Key key, LocalCacheElement localCacheElement) {
         infinispanCache.replace(
-            getKeyAsString(key),
+            getKeyAsByteArray(key),
             new MemcachedItem(localCacheElement)
         );
 
         return localCacheElement;
     }
 
-    private String getKeyAsString(Object key) {
-        return ((Key) key).bytes.toString(UTF_8);
+    private byte[] getKeyAsByteArray(Object key) {
+        return ((Key) key).bytes.array();
     }
 }
