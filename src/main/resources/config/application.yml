@@ -1,12 +1,17 @@
 ---
 infinispan:
-  cache.name: memcachedCache
   cluster.name: ElGordo
+  cache:
+    storage.name: storage
+    session.name: session
+    product.name: product
 
 memcached:
   host: 0.0.0.0
-  port: 11211
+  main.port: 11211
+  product.port: 11212
+  session.port: 11213
   idleTime: 2000
   verbose: false
 
-logging.level.root: DEBUG
+logging.level.root: INFO

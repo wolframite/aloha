@@ -13,13 +13,25 @@ import org.springframework.beans.factory.annotation.Value;
 public class MemcachedConfig {
 
     @Getter
-    private InetSocketAddress inetSocketAddress;
+    private InetSocketAddress storageInetSocketAddress;
+
+    @Getter
+    private InetSocketAddress sessionInetSocketAddress;
+
+    @Getter
+    private InetSocketAddress productInetSocketAddress;
 
     @Value("${memcached.host}")
     private String host;
 
-    @Value("${memcached.port}")
-    private int port;
+    @Value("${memcached.storage.port}")
+    private int storagePort;
+
+    @Value("${memcached.session.port}")
+    private int sessionPort;
+
+    @Value("${memcached.product.port}")
+    private int productPort;
 
     @Getter
     @Value("${memcached.idleTime}")
@@ -31,6 +43,9 @@ public class MemcachedConfig {
 
     @PostConstruct
     public void init() {
-        inetSocketAddress = new InetSocketAddress(host, port);
+        storageInetSocketAddress = new InetSocketAddress(host, storagePort);
+        sessionInetSocketAddress = new InetSocketAddress(host, sessionPort);
+        productInetSocketAddress = new InetSocketAddress(host, productPort);
     }
+
 }

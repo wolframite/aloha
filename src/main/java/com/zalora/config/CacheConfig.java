@@ -19,14 +19,28 @@ public class CacheConfig {
     Environment env;
 
     @Getter
-    private Configuration configuration;
-
-    @Getter
     private GlobalConfiguration globalConfiguration;
 
     @Getter
-    @Value("${infinispan.cache.name}")
-    private String cacheName;
+    private Configuration storageConfiguration;
+
+    @Getter
+    private Configuration sessionConfiguration;
+
+    @Getter
+    private Configuration productConfiguration;
+
+    @Getter
+    @Value("${infinispan.cache.storage.name}")
+    private String storageCacheName;
+
+    @Getter
+    @Value("${infinispan.cache.session.name}")
+    private String sessionCacheName;
+
+    @Getter
+    @Value("${infinispan.cache.product.name}")
+    private String productCacheName;
 
     @Value("${infinispan.cluster.name}")
     private String clusterName;
@@ -39,10 +53,6 @@ public class CacheConfig {
         gcb.transport()
             .defaultTransport()
             .clusterName(clusterName);
-
-        configuration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.DIST_SYNC)
-            .build();
 
         if (!isDev()) {
             setS3Credentials();
@@ -57,6 +67,18 @@ public class CacheConfig {
         }
 
         globalConfiguration = gcb.build();
+
+        storageConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(CacheMode.DIST_ASYNC)
+            .build();
+
+        sessionConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(CacheMode.DIST_SYNC)
+            .build();
+
+        productConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(CacheMode.REPL_ASYNC)
+            .build();
     }
 
     private boolean isDev() {

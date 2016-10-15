@@ -7,7 +7,6 @@ import org.infinispan.AdvancedCache;
 import com.zalora.config.CacheConfig;
 import javax.annotation.PostConstruct;
 import org.springframework.util.Assert;
-import com.zalora.storage.MemcachedItem;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,12 +30,41 @@ public class CacheManager {
     @PostConstruct
     public void init() {
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
-        embeddedCacheManager.defineConfiguration(cacheConfig.getCacheName(), cacheConfig.getConfiguration());
-        embeddedCacheManager.startCaches(cacheConfig.getCacheName());
+
+        embeddedCacheManager.defineConfiguration(
+            cacheConfig.getStorageCacheName(),
+            cacheConfig.getStorageConfiguration()
+        );
+
+        embeddedCacheManager.defineConfiguration(
+            cacheConfig.getSessionCacheName(),
+            cacheConfig.getSessionConfiguration()
+        );
+
+        embeddedCacheManager.defineConfiguration(
+            cacheConfig.getProductCacheName(),
+            cacheConfig.getProductConfiguration()
+        );
+
+        embeddedCacheManager.startCaches(
+            cacheConfig.getStorageCacheName(),
+            cacheConfig.getSessionCacheName(),
+            cacheConfig.getProductCacheName()
+        );
     }
 
-    public AdvancedCache<byte[], MemcachedItem> getMainStorage() {
-        Cache<byte[], MemcachedItem> cache = embeddedCacheManager.getCache(cacheConfig.getCacheName());
+    public AdvancedCache<byte[], byte[]> getMainStorage() {
+        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getStorageCacheName());
+        return cache.getAdvancedCache();
+    }
+
+    public AdvancedCache<byte[], byte[]> getSessionStorage() {
+        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSessionCacheName());
+        return cache.getAdvancedCache();
+    }
+
+    public AdvancedCache<byte[], byte[]> getProductStorage() {
+        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
         return cache.getAdvancedCache();
     }
 }
