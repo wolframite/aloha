@@ -20,13 +20,13 @@ public class ProductInfiniBridge extends AbstractInfiniBridge {
     }
 
     @Override
-    public LocalCacheElement put(Key key, LocalCacheElement value) {
-        byte[] memcachedKey = getKeyAsByteArray(key);
-        if (memcachedKey == null || memcachedKey.length == 0) {
+    public LocalCacheElement put(Key memcKey, LocalCacheElement value) {
+        String key = getKeyAsString(memcKey);
+        if (key == null || key.equals("")) {
             return null;
         }
 
-        ispanCache.putAsync(memcachedKey, getDataAsByteArray(value));
+        ispanCache.putAsync(key, getDataAsByteArray(value), createMetadata(value));
         return value;
     }
 

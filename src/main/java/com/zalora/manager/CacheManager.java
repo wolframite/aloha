@@ -53,18 +53,18 @@ public class CacheManager {
         );
     }
 
-    public AdvancedCache<byte[], byte[]> getMainStorage() {
-        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getMainCacheName());
+    public AdvancedCache<String, byte[]> getMainStorage() {
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getMainCacheName());
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<byte[], byte[]> getProductStorage() {
-        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
+    public AdvancedCache<String, byte[]> getProductStorage() {
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<byte[], byte[]> getSessionStorage() {
-        Cache<byte[], byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSessionCacheName());
+    public AdvancedCache<String, byte[]> getSessionStorage() {
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSessionCacheName());
         return cache.getAdvancedCache();
     }
 

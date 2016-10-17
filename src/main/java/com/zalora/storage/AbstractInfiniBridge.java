@@ -1,5 +1,6 @@
 package com.zalora.storage;
 
+import java.nio.charset.Charset;
 import java.util.*;
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -23,6 +24,8 @@ import com.thimbleware.jmemcached.Key;
 import com.thimbleware.jmemcached.LocalCacheElement;
 import com.thimbleware.jmemcached.storage.CacheStorage;
 
+import javax.transaction.*;
+
 /**
  * Hook up jMemcached and Infinispan
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -31,7 +34,9 @@ import com.thimbleware.jmemcached.storage.CacheStorage;
 @Component
 public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCacheElement> {
 
-    protected AdvancedCache<byte[], byte[]> ispanCache;
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+
+    protected AdvancedCache<String, byte[]> ispanCache;
 
     @Override
     public long getMemoryCapacity() {
@@ -76,7 +81,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
 
     @Override
     public boolean containsKey(Object key) {
-        return ispanCache.containsKey(getKeyAsByteArray(key));
+        return ispanCache.containsKey(getKeyAsString(key));
     }
 
     @Override
@@ -85,23 +90,23 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
     }
 
     @Override
-    public LocalCacheElement get(Object key) {
-        final byte[] memcachedKey = getKeyAsByteArray(key);
-        if (memcachedKey == null || memcachedKey.length == 0) {
+    public LocalCacheElement get(Object memcKey) {
+        final String key = getKeyAsString(memcKey);
+        if (key == null || key.equals("")) {
             return null;
         }
 
-        byte[] data = ispanCache.get(memcachedKey);
+        byte[] data = ispanCache.get(key);
         if (data == null) {
             return null;
         }
 
-        return createLocalCacheItem(memcachedKey, data, ispanCache.getCacheEntry(key).getMetadata());
+        return createLocalCacheItem(key, data, ispanCache.getCacheEntry(key).getMetadata());
     }
 
     @Override
     public LocalCacheElement remove(Object key) {
-        ispanCache.remove(getKeyAsByteArray(key));
+        ispanCache.remove(getKeyAsString(key));
         return new LocalCacheElement((Key) key);
     }
 
@@ -112,7 +117,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
     public Set<Key> keySet() {
         return ispanCache.keySet()
             .stream()
-            .map(key -> new Key(ChannelBuffers.copiedBuffer(key)))
+            .map(key -> new Key(ChannelBuffers.copiedBuffer(key.getBytes(UTF8))))
                 .collect(Collectors.toSet());
     }
 
@@ -127,35 +132,33 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
     }
 
     @Override
-    public LocalCacheElement putIfAbsent(Key memcKey, LocalCacheElement localCacheElement) {
-        byte[] key = getKeyAsByteArray(memcKey);
-        byte[] data = getDataAsByteArray(localCacheElement);
-
-        log.info(ispanCache.getName());
-        log.info(ispanCache.getClass().getName());
-
-        Object prev = ispanCache.get(key);
-        if (prev == null) {
-            prev = ispanCache.putIfAbsent(key, data, createMetadata(localCacheElement));
-        }
-
-        if (prev == null) {
+    public LocalCacheElement putIfAbsent(Key memcKey, LocalCacheElement value) {
+        String key = getKeyAsString(memcKey);
+        if (key == null || key.equals("")) {
             return null;
         }
 
-        localCacheElement.setData(ChannelBuffers.copiedBuffer(data));
-        return localCacheElement;
+        byte[] prev = ispanCache.get(key);
+        if (prev == null) {
+            Metadata metadata = createMetadata(value);
+            ispanCache.putIfAbsent(key, getDataAsByteArray(value), metadata);
+            return null;
+        }
+
+        value.setData(ChannelBuffers.copiedBuffer(prev));
+        return value;
+
     }
 
     @Override
     public boolean remove(Object key, Object localCacheElement) {
-        return ispanCache.remove(getKeyAsByteArray(key), getDataAsByteArray(localCacheElement));
+        return ispanCache.remove(getKeyAsString(key), getDataAsByteArray(localCacheElement));
     }
 
     @Override
     public boolean replace(Key key, LocalCacheElement localCacheElement, LocalCacheElement v1) {
         return ispanCache.replace(
-            getKeyAsByteArray(key),
+            getKeyAsString(key),
             getDataAsByteArray(localCacheElement),
             getDataAsByteArray(v1)
         );
@@ -164,25 +167,19 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
     @Override
     public LocalCacheElement replace(Key key, LocalCacheElement localCacheElement) {
         ispanCache.replace(
-            getKeyAsByteArray(key),
+            getKeyAsString(key),
             getDataAsByteArray(localCacheElement)
         );
 
         return localCacheElement;
     }
 
-    protected byte[] getKeyAsByteArray(Object key) {
+    protected String getKeyAsString(Object key) {
         Key localKey = (Key) key;
         byte[] data = new byte[localKey.bytes.capacity()];
         localKey.bytes.readBytes(data);
 
-        return data;
-    }
-
-    protected void fillKey(Object memcKey, byte[] key) {
-        Key localKey = (Key) memcKey;
-        key = new byte[localKey.bytes.capacity()];
-        localKey.bytes.readBytes(key);
+        return new String(data);
     }
 
     protected byte[] getDataAsByteArray(Object value) {
@@ -193,11 +190,11 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
         return data;
     }
 
-    protected LocalCacheElement createLocalCacheItem(byte[] key, byte[] data, Metadata metadata) {
+    protected LocalCacheElement createLocalCacheItem(String key, byte[] data, Metadata metadata) {
         MemcachedMetadata memcachedMetadata = (MemcachedMetadata) metadata;
 
         LocalCacheElement item = new LocalCacheElement(
-            new Key(ChannelBuffers.copiedBuffer(key)),
+            new Key(ChannelBuffers.copiedBuffer(key.getBytes(UTF8))),
             (int) memcachedMetadata.flags(),
             (int) memcachedMetadata.lifespan(),
             0
@@ -220,7 +217,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
      * https://github.com/infinispan/infinispan/blob/8.2.4.Final/server/memcached/src/main/scala/org/infinispan/server/memcached/MemcachedDecoder.scala#L388-L402
      */
     protected EntryVersion generateVersion() {
-        ComponentRegistry registry = this.ispanCache.getComponentRegistry();
+        ComponentRegistry registry = ispanCache.getComponentRegistry();
         VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
         if (cacheVersionGenerator == null) {
             // It could be null, for example when not running in compatibility mode.
@@ -229,9 +226,10 @@ public abstract class AbstractInfiniBridge implements CacheStorage<Key, LocalCac
             NumericVersionGenerator newVersionGenerator = new NumericVersionGenerator()
                 .clustered(registry.getComponent(RpcManager.class) != null);
             registry.registerComponent(newVersionGenerator, VersionGenerator.class);
-            return newVersionGenerator.generateNew();
+
+            return newVersionGenerator.nonExistingVersion();
         } else {
-            return cacheVersionGenerator.generateNew();
+            return cacheVersionGenerator.nonExistingVersion();
         }
     }
 }

@@ -2,6 +2,14 @@ package com.zalora.config;
 
 import lombok.Getter;
 import javax.annotation.PostConstruct;
+
+import org.infinispan.commons.equivalence.Equivalence;
+import org.infinispan.factories.components.ManageableComponentMetadata;
+import org.infinispan.server.core.LifecycleCallbacks;
+import org.infinispan.transaction.*;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
+import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.springframework.util.Assert;
 import org.infinispan.configuration.cache.*;
 import org.infinispan.configuration.global.*;
@@ -78,7 +86,13 @@ public class CacheConfig {
 
         sessionConfiguration = new ConfigurationBuilder()
             .clustering().cacheMode(CacheMode.REPL_SYNC)
+            .versioning().
+            .storeAsBinary().enabled(false)
+            .transaction()
+                .transactionMode(TransactionMode.TRANSACTIONAL)
+                .transactionManagerLookup(new JBossStandaloneJTAManagerLookup())
             .build();
+
     }
 
     private boolean isDev() {
