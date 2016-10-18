@@ -30,41 +30,15 @@ public class CacheManager {
     @PostConstruct
     public void init() {
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
-
         embeddedCacheManager.defineConfiguration(
-            cacheConfig.getMainCacheName(),
-            cacheConfig.getMainConfiguration()
+            cacheConfig.getCacheName(),
+            cacheConfig.getCacheConfiguration()
         );
-
-        embeddedCacheManager.defineConfiguration(
-            cacheConfig.getProductCacheName(),
-            cacheConfig.getProductConfiguration()
-        );
-
-        embeddedCacheManager.defineConfiguration(
-            cacheConfig.getSessionCacheName(),
-            cacheConfig.getSessionConfiguration()
-        );
-
-        embeddedCacheManager.startCaches(
-            cacheConfig.getMainCacheName(),
-            cacheConfig.getProductCacheName(),
-            cacheConfig.getSessionCacheName()
-        );
-    }
-
-    public AdvancedCache<String, byte[]> getMainStorage() {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getMainCacheName());
-        return cache.getAdvancedCache();
+        embeddedCacheManager.startCaches(cacheConfig.getCacheName());
     }
 
     public AdvancedCache<String, byte[]> getProductStorage() {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
-        return cache.getAdvancedCache();
-    }
-
-    public AdvancedCache<String, byte[]> getSessionStorage() {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSessionCacheName());
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getCacheName());
         return cache.getAdvancedCache();
     }
 

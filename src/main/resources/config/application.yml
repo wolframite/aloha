@@ -1,16 +1,11 @@
 ---
 infinispan:
   cluster.name: ElGordo
-  cache:
-    main.name: main
-    product.name: product
-    session.name: session
+  cache.name: main
 
 memcached:
   host: 0.0.0.0
-  main.port: 11211
-  product.port: 11212
-  session.port: 11213
+  port: 11211
   idleTime: 2000
   verbose: false
 

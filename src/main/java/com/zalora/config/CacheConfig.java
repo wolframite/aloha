@@ -2,14 +2,6 @@ package com.zalora.config;
 
 import lombok.Getter;
 import javax.annotation.PostConstruct;
-
-import org.infinispan.commons.equivalence.Equivalence;
-import org.infinispan.factories.components.ManageableComponentMetadata;
-import org.infinispan.server.core.LifecycleCallbacks;
-import org.infinispan.transaction.*;
-import org.infinispan.transaction.TransactionMode;
-import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
-import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.springframework.util.Assert;
 import org.infinispan.configuration.cache.*;
 import org.infinispan.configuration.global.*;
@@ -18,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.*;
 
 /**
- * @author Wolfram Huesken
+ * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
 @Component
 public class CacheConfig {
@@ -30,25 +22,11 @@ public class CacheConfig {
     private GlobalConfiguration globalConfiguration;
 
     @Getter
-    private Configuration mainConfiguration;
+    private Configuration cacheConfiguration;
 
     @Getter
-    private Configuration productConfiguration;
-
-    @Getter
-    private Configuration sessionConfiguration;
-
-    @Getter
-    @Value("${infinispan.cache.main.name}")
-    private String mainCacheName;
-
-    @Getter
-    @Value("${infinispan.cache.product.name}")
-    private String productCacheName;
-
-    @Getter
-    @Value("${infinispan.cache.session.name}")
-    private String sessionCacheName;
+    @Value("${infinispan.cache.name}")
+    private String cacheName;
 
     @Value("${infinispan.cluster.name}")
     private String clusterName;
@@ -56,7 +34,7 @@ public class CacheConfig {
     @PostConstruct
     public void init() { configure(); }
 
-    private final void configure() {
+    private void configure() {
         GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
         gcb.transport()
             .defaultTransport()
@@ -76,23 +54,9 @@ public class CacheConfig {
 
         globalConfiguration = gcb.build();
 
-        mainConfiguration = new ConfigurationBuilder()
+        cacheConfiguration = new ConfigurationBuilder()
             .clustering().cacheMode(CacheMode.DIST_ASYNC)
             .build();
-
-        productConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.DIST_ASYNC)
-            .build();
-
-        sessionConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.REPL_SYNC)
-            .versioning().
-            .storeAsBinary().enabled(false)
-            .transaction()
-                .transactionMode(TransactionMode.TRANSACTIONAL)
-                .transactionManagerLookup(new JBossStandaloneJTAManagerLookup())
-            .build();
-
     }
 
     private boolean isDev() {
