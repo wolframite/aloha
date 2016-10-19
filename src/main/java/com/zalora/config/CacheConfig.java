@@ -28,6 +28,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.name}")
     private String cacheName;
 
+    @Value("${infinispan.cache.mode}")
+    private CacheMode cacheMode;
+
     @Value("${infinispan.cluster.name}")
     private String clusterName;
 
@@ -55,7 +58,7 @@ public class CacheConfig {
         globalConfiguration = gcb.build();
 
         cacheConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(CacheMode.DIST_ASYNC)
+            .clustering().cacheMode(cacheMode)
             .build();
     }
 

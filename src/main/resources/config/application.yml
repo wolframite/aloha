@@ -1,7 +1,9 @@
 ---
 infinispan:
   cluster.name: ElGordo
-  cache.name: main
+  cache:
+    name: main
+    mode: REPL_ASYNC
 
 memcached:
   host: 0.0.0.0
