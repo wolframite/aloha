@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import org.jboss.netty.buffer.ChannelBuffers;
 
 import org.springframework.util.Assert;
@@ -104,6 +106,15 @@ public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement>
         }
 
         return generateLocalCacheItem(localKey, ce);
+    }
+
+    @Override
+    public Collection<LocalCacheElement> getMulti(Set<String> set) {
+        List results = ispanCache.getAllCacheEntries(set).entrySet().stream()
+            .map(entry -> generateLocalCacheItem(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
+
+        return results;
     }
 
     @Override

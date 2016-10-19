@@ -6,7 +6,7 @@
 
     <groupId>com.zalora</groupId>
     <artifactId>infinispan-jmemcached</artifactId>
-    <version>0.0.12</version>
+    <version>0.0.13</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -49,14 +49,14 @@
         <dependency>
             <groupId>com.github.zalora</groupId>
             <artifactId>jmemcached</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
 
         <!--
         <dependency>
             <groupId>com.zalora.jmemcached</groupId>
             <artifactId>jmemcached-core</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
         -->
 
