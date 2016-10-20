@@ -1,26 +1,17 @@
-package com.zalora.storage;
+package com.zalora.aloha.storage;
 
 import com.zalora.jmemcached.LocalCacheElement;
-import com.zalora.jmemcached.storage.CacheStorage;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.AdvancedCache;
 import org.infinispan.container.entries.CacheEntry;
-import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.container.versioning.NumericVersionGenerator;
-import org.infinispan.container.versioning.VersionGenerator;
-import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.server.memcached.MemcachedMetadata;
 import org.infinispan.server.memcached.MemcachedMetadataBuilder;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.springframework.util.Assert;
 
 /**
  * Hook up jMemcached and Infinispan
@@ -28,64 +19,13 @@ import org.springframework.util.Assert;
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
 @Slf4j
-public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheElement> {
+public class DefaultInfiniBridge extends AbstractInfiniBridge {
 
-    protected AdvancedCache<String, byte[]> ispanCache;
+    private AdvancedCache<String, byte[]> ispanCache;
 
     public DefaultInfiniBridge(AdvancedCache<String, byte[]> ispanCache) {
-        Assert.notNull(ispanCache, "Infinispan Cache must not be null");
+        super(ispanCache);
         this.ispanCache = ispanCache;
-    }
-
-    @Override
-    public long getMemoryCapacity() {
-        return Runtime.getRuntime().maxMemory();
-    }
-
-    /**
-     * Number is wrong, but better than returning 0
-     */
-    @Override
-    public long getMemoryUsed() {
-        return Runtime.getRuntime().maxMemory() - Runtime.getRuntime().freeMemory();
-    }
-
-    /**
-     * Infinispan doesn't provide it, so let's make it up
-     */
-    @Override
-    public int capacity() {
-        return Math.round(ispanCache.size() * 1.1f);
-    }
-
-    @Override
-    public void close() throws IOException {
-        ispanCache.stop();
-    }
-
-    @Override
-    public int size() {
-        return ispanCache.size();
-    }
-
-    @Override
-    public void clear() {
-        ispanCache.clear();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return ispanCache.isEmpty();
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        return ispanCache.containsKey(key);
-    }
-
-    @Override
-    public boolean containsValue(Object value) {
-        return ispanCache.containsValue(value);
     }
 
     @Override
@@ -110,17 +50,6 @@ public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheEleme
     public LocalCacheElement put(String key, LocalCacheElement value) {
         ispanCache.put(key, getDataFromCacheElement(value), generateMetadata(value));
         return value;
-    }
-
-    @Override
-    public LocalCacheElement remove(Object key) {
-        String localKey = (String) key;
-        byte[] result = ispanCache.remove(localKey);
-        if (result == null) {
-            return null;
-        }
-
-        return new LocalCacheElement(localKey);
     }
 
     @Override
@@ -154,25 +83,6 @@ public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheEleme
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends LocalCacheElement> map) {
-    }
-
-    @Override
-    public Set<String> keySet() {
-        return null;
-    }
-
-    @Override
-    public Collection<LocalCacheElement> values() {
-        return null;
-    }
-
-    @Override
-    public Set<Entry<String, LocalCacheElement>> entrySet() {
-        return null;
-    }
-
-    @Override
     public LocalCacheElement putIfAbsent(String key, LocalCacheElement value) {
         byte[] prev = ispanCache.putIfAbsent(key, getDataFromCacheElement(value), generateMetadata(value));
         if (prev == null) {
@@ -182,7 +92,7 @@ public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheEleme
         return value;
     }
 
-    protected LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
+    private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
         MemcachedMetadata md = (MemcachedMetadata) cacheEntry.getMetadata();
 
         LocalCacheElement item = new LocalCacheElement(
@@ -193,7 +103,7 @@ public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheEleme
         return item;
     }
 
-    protected Metadata generateMetadata(Object localCacheElement) {
+    private Metadata generateMetadata(Object localCacheElement) {
         LocalCacheElement lce = (LocalCacheElement) localCacheElement;
         Metadata.Builder mmb = new MemcachedMetadataBuilder()
             .flags(lce.getFlags())
@@ -207,22 +117,10 @@ public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheEleme
         return mmb.build();
     }
 
-    protected EntryVersion generateVersion() {
-        ComponentRegistry registry = ispanCache.getComponentRegistry();
-        VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
-        if (cacheVersionGenerator == null) {
-            NumericVersionGenerator newVersionGenerator = new NumericVersionGenerator()
-                .clustered(registry.getComponent(RpcManager.class) != null);
-            registry.registerComponent(newVersionGenerator, VersionGenerator.class);
-            return newVersionGenerator.nonExistingVersion();
-        } else {
-            return cacheVersionGenerator.nonExistingVersion();
-        }
-    }
-
-    protected byte[] getDataFromCacheElement(LocalCacheElement localCacheElement) {
+    private byte[] getDataFromCacheElement(LocalCacheElement localCacheElement) {
         byte[] data = new byte[localCacheElement.getData().capacity()];
         localCacheElement.getData().getBytes(0, data);
         return data;
     }
+
 }

@@ -1,23 +1,22 @@
-# Infinispan-jMemcached [![Build Status](https://travis-ci.org/zalora/infinispan-jmemcached.svg?branch=master)](https://travis-ci.org/zalora/infinispan-jmemcached)
+# ALOHA [![Build Status](https://travis-ci.org/zalora/infinispan-jmemcached.svg?branch=master)](https://travis-ci.org/zalora/infinispan-jmemcached)
 
-As the infinispan memcached-server has some buffer problem, which makes it unreliable, we replaced the memcached server
-with jMemcached, which is reliable and fast.
+## What is aloha?
+
+ALOHA == zALOra jmemcacHed infinispAn
+
+It's a little bit far-fetched, but naming is one of the hardest task in IT these days...
+
+aloha aims to replace a traditional memcached instance with a clusterable, HA memory grid, which still speaks and behaves like memcached
+
+### The Architecture
+
+The setup is built on top of these libraries:
+- Infinispan for the memory grid
+- jmemcached for the memcached frontend
+- spring-boot because it's great!
+
+We tried infinispan to use the infinispan server version first, because it comes with an activated memcached, but we
+found a bug, which made it impossible for us to use it. That was the reason we replaced it with jmemcached. You can
+read more about that here: https://github.com/zalora/jmemcached
 
 ## Configuration
-
-For live mode (spring profile == 'dev') export the following environment variable:
-
-`SPRING_PROFILES_ACTIVE=live` or append `--spring.profiles.active=live`
-
-### CLI Parameters
-
-| Parameter                      | Description                                                               | Default Value |
-|--------------------------------|---------------------------------------------------------------------------|---------------|
-| -Djgroups.bind_addr            | bind address for infinispan sync                                          | localhost     |
-| -Djgroups.s3.access_key        | S3 Access Key                                                             | -             |
-| -Djgroups.s3.secret_access_key | S3 Password                                                               | -             |
-| -Djgroups.s3.bucket            | S3 Bucket Name                                                            | -             |
-
-Every parameter in `src/main/resources/config/application.yml` can be configured in the same style
-
-In development mode, you don't have to pass in any parameters

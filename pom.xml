@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.zalora</groupId>
-    <artifactId>infinispan-jmemcached</artifactId>
+    <groupId>com.zalora.shop</groupId>
+    <artifactId>aloha</artifactId>
     <version>0.0.15</version>
 
     <parent>
@@ -35,6 +35,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
             <version>8.2.4.Final</version>
@@ -44,21 +49,33 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-memcached</artifactId>
             <version>8.2.4.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-cachestore-jpa</artifactId>
+            <version>8.2.4.Final</version>
+        </dependency>
+
+        <!--
         <dependency>
             <groupId>com.github.zalora</groupId>
             <artifactId>jmemcached</artifactId>
             <version>1.0.4</version>
         </dependency>
+        -->
 
-        <!--
         <dependency>
             <groupId>com.zalora.jmemcached</groupId>
             <artifactId>jmemcached-core</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5</version>
         </dependency>
-        -->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -70,6 +87,11 @@
             <groupId>org.jboss.netty</groupId>
             <artifactId>netty</artifactId>
             <version>3.2.10.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
     </dependencies>
 
