@@ -1,49 +1,46 @@
 package com.zalora.storage;
 
-import java.util.*;
-import java.io.IOException;
-import java.nio.charset.Charset;
+import com.zalora.jmemcached.LocalCacheElement;
+import com.zalora.jmemcached.storage.CacheStorage;
+import com.zalora.manager.CacheManager;
 import lombok.extern.slf4j.Slf4j;
+import org.infinispan.AdvancedCache;
+import org.infinispan.container.entries.CacheEntry;
+import org.infinispan.container.versioning.EntryVersion;
+import org.infinispan.container.versioning.NumericVersionGenerator;
+import org.infinispan.container.versioning.VersionGenerator;
+import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.metadata.Metadata;
+import org.infinispan.remoting.rpc.RpcManager;
+import org.infinispan.server.memcached.MemcachedMetadata;
+import org.infinispan.server.memcached.MemcachedMetadataBuilder;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.jboss.netty.buffer.ChannelBuffers;
-
-import org.springframework.util.Assert;
-import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.zalora.manager.CacheManager;
-import com.zalora.jmemcached.LocalCacheElement;
-import com.zalora.jmemcached.storage.CacheStorage;
-
-import org.infinispan.AdvancedCache;
-import org.infinispan.metadata.Metadata;
-import org.infinispan.remoting.rpc.RpcManager;
-import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.container.entries.CacheEntry;
-import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.server.memcached.MemcachedMetadata;
-import org.infinispan.container.versioning.VersionGenerator;
-import org.infinispan.server.memcached.MemcachedMetadataBuilder;
-import org.infinispan.container.versioning.NumericVersionGenerator;
-
 /**
  * Hook up jMemcached and Infinispan
+ *
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
 @Slf4j
 @Component
 public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement> {
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
-
     protected AdvancedCache<String, byte[]> ispanCache;
 
     @Autowired
     public MainInfiniBridge(CacheManager cacheManager) {
-        Assert.notNull(cacheManager.getProductStorage(), "Infinispan Cache could not be loaded");
-        this.ispanCache = cacheManager.getProductStorage();
+        Assert.notNull(cacheManager.getMainCache(), "Infinispan Cache could not be loaded");
+        this.ispanCache = cacheManager.getMainCache();
     }
 
     @Override
@@ -110,11 +107,9 @@ public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement>
 
     @Override
     public Collection<LocalCacheElement> getMulti(Set<String> set) {
-        List results = ispanCache.getAllCacheEntries(set).entrySet().stream()
+        return ispanCache.getAllCacheEntries(set).entrySet().stream()
             .map(entry -> generateLocalCacheItem(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
-
-        return results;
     }
 
     @Override
@@ -165,7 +160,8 @@ public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement>
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends LocalCacheElement> map) {}
+    public void putAll(Map<? extends String, ? extends LocalCacheElement> map) {
+    }
 
     @Override
     public Set<String> keySet() {
@@ -222,7 +218,7 @@ public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement>
         VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
         if (cacheVersionGenerator == null) {
             NumericVersionGenerator newVersionGenerator = new NumericVersionGenerator()
-                    .clustered(registry.getComponent(RpcManager.class) != null);
+                .clustered(registry.getComponent(RpcManager.class) != null);
             registry.registerComponent(newVersionGenerator, VersionGenerator.class);
             return newVersionGenerator.nonExistingVersion();
         } else {

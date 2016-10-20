@@ -26,10 +26,10 @@ public class MemcachedManager {
         MainInfiniBridge mainInfiniBridge) {
 
         Assert.notNull(cacheManager, "Infinispan Cache Manager could not be loaded");
-        Assert.notNull(mainInfiniBridge, "Product Infinispan Bridge Storage could not be loaded");
+        Assert.notNull(mainInfiniBridge, "Main Infinispan Bridge Storage could not be loaded");
         Assert.notNull(
-            memcachedConfig.getInetSocketAddress(),
-            "Product-Memcached listen address is not configured"
+            memcachedConfig.getMainInetSocketAddress(),
+            "Main Memcached listen address is not configured"
         );
 
         this.cacheManager = cacheManager;
@@ -40,7 +40,7 @@ public class MemcachedManager {
     @PostConstruct
     public void init() {
         MemCacheDaemon productDaemon = new MemCacheDaemon();
-        productDaemon.setAddr(memcachedConfig.getInetSocketAddress());
+        productDaemon.setAddr(memcachedConfig.getMainInetSocketAddress());
         productDaemon.setIdleTime(memcachedConfig.getIdleTime());
         productDaemon.setVerbose(memcachedConfig.isVerbose());
         productDaemon.setCache(new CacheImpl(mainInfiniBridge));

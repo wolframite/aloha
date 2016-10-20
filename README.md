@@ -19,7 +19,7 @@ For live mode (spring profile == 'dev') export the following environment variabl
 | -Djgroups.s3.bucket            | S3 Bucket Name                                                            | -             |
 | -Dinfinispan.cluster.name      | Cluster name groups nodes and defines the S3 folder name                  | -             |
 | -Dinfinispan.cache.name        | Cache name reflects in the exported MBeans                                | -             |
-| -Dinfinispan.cache.mode        | Available sync modes are: REPL_SYNC, REPL_ASYNC, DIST_SYNC and DIST_ASYNC | REPL_ASYNC    |
+| -Dinfinispan.cache.mode        | Available sync modes are: REPL_SYNC, REPL_ASYNC, DIST_SYNC and DIST_ASYNC | DIST_ASYNC    |
 | -Dlogging.level.root           | Available log levels: ERROR, WARN, INFO, DEBUG, TRACE                     | INFO          |
 
 In development mode, you don't have to pass in any parameters

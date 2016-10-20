@@ -2,13 +2,21 @@
 infinispan:
   cluster.name: ElGordo
   cache:
-    name: main
-    mode: REPL_ASYNC
+    main:
+      name: main
+      mode: DIST_ASYNC
+      enabled: true
+    product:
+      name: procuct
+      mode: DIST_ASYNC
+      enabled: true
 
 memcached:
   host: 0.0.0.0
-  port: 11211
   idleTime: 2000
   verbose: false
+  port:
+    main: 11211
+    product: 11212
 
 logging.level.root: INFO

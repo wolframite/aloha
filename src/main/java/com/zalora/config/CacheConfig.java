@@ -21,17 +21,35 @@ public class CacheConfig {
     private GlobalConfiguration globalConfiguration;
 
     @Getter
-    private Configuration cacheConfiguration;
+    private Configuration mainCacheConfiguration;
 
     @Getter
-    @Value("${infinispan.cache.name}")
-    private String cacheName;
-
-    @Value("${infinispan.cache.mode}")
-    private CacheMode cacheMode;
+    private Configuration productCacheConfiguration;
 
     @Value("${infinispan.cluster.name}")
     private String clusterName;
+
+    @Getter
+    @Value("${infinispan.cache.main.name}")
+    private String mainCacheName;
+
+    @Value("${infinispan.cache.main.mode}")
+    private CacheMode mainCacheMode;
+
+    @Getter
+    @Value("${infinispan.cache.main.enabled}")
+    private boolean mainCacheEnabled;
+
+    @Getter
+    @Value("${infinispan.cache.product.name}")
+    private String productCacheName;
+
+    @Value("${infinispan.cache.product.mode}")
+    private CacheMode productCacheMode;
+
+    @Getter
+    @Value("${infinispan.cache.product.enabled}")
+    private boolean productCacheEnabled;
 
     @PostConstruct
     public void init() { configure(); }
@@ -47,9 +65,27 @@ public class CacheConfig {
         }
 
         globalConfiguration = gcb.build();
+        configureMainCache();
+        configureProductCache();
+    }
 
-        cacheConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(cacheMode)
+    private void configureMainCache() {
+        if (!isMainCacheEnabled()) {
+            return;
+        }
+
+        mainCacheConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(mainCacheMode)
+            .build();
+    }
+
+    private void configureProductCache() {
+        if (!isProductCacheEnabled()) {
+            return;
+        }
+
+        productCacheConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(productCacheMode)
             .build();
     }
 
