@@ -1,10 +1,10 @@
 package com.zalora.config;
 
-import lombok.Getter;
 import java.net.InetSocketAddress;
 import javax.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -18,6 +18,9 @@ public class MemcachedConfig {
     @Getter
     private InetSocketAddress productInetSocketAddress;
 
+    @Getter
+    private InetSocketAddress sessionInetSocketAddress;
+
     @Value("${memcached.host}")
     private String host;
 
@@ -26,6 +29,9 @@ public class MemcachedConfig {
 
     @Value("${memcached.port.product}")
     private int productPort;
+
+    @Value("${memcached.port.session}")
+    private int sessionPort;
 
     @Getter
     @Value("${memcached.idleTime}")
@@ -39,6 +45,7 @@ public class MemcachedConfig {
     public void init() {
         mainInetSocketAddress = new InetSocketAddress(host, mainPort);
         productInetSocketAddress = new InetSocketAddress(host, productPort);
+        sessionInetSocketAddress = new InetSocketAddress(host, sessionPort);
     }
 
 }

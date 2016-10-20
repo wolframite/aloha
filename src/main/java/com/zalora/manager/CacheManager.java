@@ -1,17 +1,15 @@
 package com.zalora.manager;
 
-import lombok.Getter;
-import org.infinispan.Cache;
-import org.infinispan.manager.*;
-import org.infinispan.AdvancedCache;
 import com.zalora.config.CacheConfig;
 import javax.annotation.PostConstruct;
-import org.springframework.util.Assert;
-import org.springframework.stereotype.Component;
+import lombok.Getter;
+import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -34,7 +32,7 @@ public class CacheManager {
     public void init() {
         // At least one cache should be running
         Assert.isTrue(cacheConfig.isMainCacheEnabled() || cacheConfig.isProductCacheEnabled());
-        String[] enabledCaches = new String[]{"", ""};
+        String[] enabledCaches = new String[]{"", "", ""};
 
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
 
@@ -58,6 +56,16 @@ public class CacheManager {
             enabledCaches[1] = cacheConfig.getProductCacheName();
         }
 
+        // Configure session cache
+        if (cacheConfig.isSessionCacheEnabled()) {
+            embeddedCacheManager.defineConfiguration(
+                cacheConfig.getSessionCacheName(),
+                cacheConfig.getSessionCacheConfiguration()
+            );
+
+            enabledCaches[2] = cacheConfig.getSessionCacheName();
+        }
+
         embeddedCacheManager.startCaches(enabledCaches);
     }
 
@@ -67,6 +75,11 @@ public class CacheManager {
     }
 
     public AdvancedCache<String, byte[]> getProductCache() {
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
+        return cache.getAdvancedCache();
+    }
+
+    public AdvancedCache<String, byte[]> getSessionCache() {
         Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getProductCacheName());
         return cache.getAdvancedCache();
     }

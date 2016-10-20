@@ -1,12 +1,16 @@
 package com.zalora.config;
 
-import lombok.Getter;
 import javax.annotation.PostConstruct;
-import org.infinispan.configuration.cache.*;
-import org.infinispan.configuration.global.*;
+import lombok.Getter;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.*;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -25,6 +29,9 @@ public class CacheConfig {
 
     @Getter
     private Configuration productCacheConfiguration;
+
+    @Getter
+    private Configuration sessionCacheConfiguration;
 
     @Value("${infinispan.cluster.name}")
     private String clusterName;
@@ -51,8 +58,21 @@ public class CacheConfig {
     @Value("${infinispan.cache.product.enabled}")
     private boolean productCacheEnabled;
 
+    @Getter
+    @Value("${infinispan.cache.session.name}")
+    private String sessionCacheName;
+
+    @Value("${infinispan.cache.session.mode}")
+    private CacheMode sessionCacheMode;
+
+    @Getter
+    @Value("${infinispan.cache.session.enabled}")
+    private boolean sessionCacheEnabled;
+
     @PostConstruct
-    public void init() { configure(); }
+    public void init() {
+        configure();
+    }
 
     private void configure() {
         GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
@@ -67,6 +87,7 @@ public class CacheConfig {
         globalConfiguration = gcb.build();
         configureMainCache();
         configureProductCache();
+        configureSessionCache();
     }
 
     private void configureMainCache() {
@@ -86,6 +107,16 @@ public class CacheConfig {
 
         productCacheConfiguration = new ConfigurationBuilder()
             .clustering().cacheMode(productCacheMode)
+            .build();
+    }
+
+    private void configureSessionCache() {
+        if (!isSessionCacheEnabled()) {
+            return;
+        }
+
+        sessionCacheConfiguration = new ConfigurationBuilder()
+            .clustering().cacheMode(sessionCacheMode)
             .build();
     }
 

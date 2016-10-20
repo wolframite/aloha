@@ -5,11 +5,15 @@ infinispan:
     main:
       name: main
       mode: DIST_ASYNC
-      enabled: true
+      enabled: false
     product:
       name: procuct
       mode: DIST_ASYNC
       enabled: true
+    session:
+      name: session
+      mode: DIST_SYNC
+      enabled: false
 
 memcached:
   host: 0.0.0.0
@@ -18,5 +22,6 @@ memcached:
   port:
     main: 11211
     product: 11212
+    session: 11213
 
 logging.level.root: INFO
