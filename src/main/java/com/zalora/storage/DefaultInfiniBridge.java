@@ -2,7 +2,12 @@ package com.zalora.storage;
 
 import com.zalora.jmemcached.LocalCacheElement;
 import com.zalora.jmemcached.storage.CacheStorage;
-import com.zalora.manager.CacheManager;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.AdvancedCache;
 import org.infinispan.container.entries.CacheEntry;
@@ -15,16 +20,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.server.memcached.MemcachedMetadata;
 import org.infinispan.server.memcached.MemcachedMetadataBuilder;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Hook up jMemcached and Infinispan
@@ -32,15 +28,13 @@ import java.util.stream.Collectors;
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
 @Slf4j
-@Component
-public class MainInfiniBridge implements CacheStorage<String, LocalCacheElement> {
+public class DefaultInfiniBridge implements CacheStorage<String, LocalCacheElement> {
 
     protected AdvancedCache<String, byte[]> ispanCache;
 
-    @Autowired
-    public MainInfiniBridge(CacheManager cacheManager) {
-        Assert.notNull(cacheManager.getMainCache(), "Infinispan Cache could not be loaded");
-        this.ispanCache = cacheManager.getMainCache();
+    public DefaultInfiniBridge(AdvancedCache<String, byte[]> ispanCache) {
+        Assert.notNull(ispanCache, "Infinispan Cache must not be null");
+        this.ispanCache = ispanCache;
     }
 
     @Override

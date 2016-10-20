@@ -5,7 +5,7 @@ infinispan:
     main:
       name: main
       mode: DIST_ASYNC
-      enabled: false
+      enabled: true
     product:
       name: procuct
       mode: DIST_ASYNC
@@ -13,7 +13,7 @@ infinispan:
     session:
       name: session
       mode: DIST_SYNC
-      enabled: false
+      enabled: true
 
 memcached:
   host: 0.0.0.0
