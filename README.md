@@ -5,12 +5,17 @@ with jMemcached, which is reliable and fast.
 
 ## Configuration
 
-For live mode (spring profile == 'dev') export the following environment variables:
+For live mode (spring profile == 'dev') export the following environment variable:
 
-- SPRING_PROFILES_ACTIVE=live
-- S3_ACCESS_KEY=
-- S3_SECRET_ACCESS_KEY=
-- S3_BUCKET=
-- JGROUPS_INET_ADDRESS=
+`SPRING_PROFILES_ACTIVE=live` or append `--spring.profiles.active=live`
 
-In development mode (spring profile != ('dev' || 'default') no S3 buckets are used.
+### CLI Parameters
+
+| Parameter                      | Description                      | Default Value |
+|--------------------------------|----------------------------------|---------------|
+| -Djgroups.bind_addr            | bind address for infinispan sync | localhost     |
+| -Djgroups.s3.access_key        | S3 Access Key                    | -             |
+| -Djgroups.s3.secret_access_key | S3 Password                      | -             |
+| -Djgroups.s3.bucket            | S3 Bucket Name                   | -             |
+
+In development mode, you don't have to pass in any parameters
