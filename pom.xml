@@ -63,19 +63,19 @@
             <version>8.2.4.Final</version>
         </dependency>
 
-        <!--
         <dependency>
             <groupId>com.github.zalora</groupId>
             <artifactId>jmemcached</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5</version>
         </dependency>
-        -->
 
+        <!--
         <dependency>
             <groupId>com.zalora.jmemcached</groupId>
             <artifactId>jmemcached-core</artifactId>
             <version>1.0.5</version>
         </dependency>
+        -->
 
         <dependency>
             <groupId>org.projectlombok</groupId>

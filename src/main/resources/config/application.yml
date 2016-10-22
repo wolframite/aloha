@@ -20,6 +20,7 @@ infinispan:
       mode: DIST_ASYNC
       enabled: true
       preload: false
+      preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
 

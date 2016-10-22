@@ -10,7 +10,7 @@ jdk:
 os:
   - linux
 
-before_deploy: export DEPLOY_JAR=$(ls target/infinispan-jmemcached-*.jar)
+before_deploy: export DEPLOY_JAR=$(ls target/aloha-*.jar)
 deploy:
   provider: releases
   api_key:
