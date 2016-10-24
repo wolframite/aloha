@@ -1,14 +1,51 @@
 ---
 infinispan:
-  cluster.name: ElGordo
+  cluster:
+    name: ElGordo
+    jgroups.config:
+
   cache:
-    name: main
-    mode: REPL_ASYNC
+    primary:
+      name: main
+      mode: DIST_ASYNC
+      enabled: true
+
+    secondary:
+      name: session
+      mode: DIST_SYNC
+      enabled: false
+
+    readthrough:
+      name: readthrough
+      mode: DIST_ASYNC
+      enabled: true
+      preload: false
+      preloadPageSize: 5000
+      entityClass: com.zalora.aloha.models.entities.Product
+      persistenceUnitName: org.infinispan.persistence.jpa
 
 memcached:
   host: 0.0.0.0
-  port: 11211
   idleTime: 2000
   verbose: false
+  port:
+    primary : 11211
+    secondary: 11212
+    readthrough: 11213
 
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/bob_live_my?autoReconnect=true&useSSL=false"
+    username: root
+    password:
+    driver-class-name: "com.mysql.jdbc.Driver"
+    testWhileIdle: true
+    validationQuery: SELECT 1
+
+  jpa:
+    show-sql: false
+    hbm2ddl-auto: validate
+    properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+server.port: 8090
 logging.level.root: INFO
