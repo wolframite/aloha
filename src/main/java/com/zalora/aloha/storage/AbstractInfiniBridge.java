@@ -44,11 +44,11 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
     }
 
     /**
-     * Infinispan doesn't provide it, so let's make it up
+     * Removed for performance reasons
      */
     @Override
     public int capacity() {
-        return Math.round(ispanCache.size() * 1.1f);
+        return 0;
     }
 
     @Override
@@ -56,9 +56,12 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
         ispanCache.stop();
     }
 
+    /**
+     * Removed for performance reasons
+     */
     @Override
     public int size() {
-        return ispanCache.size();
+        return 0;
     }
 
     @Override
