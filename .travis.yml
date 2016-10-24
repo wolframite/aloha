@@ -10,7 +10,9 @@ jdk:
 os:
   - linux
 
-before_deploy: export DEPLOY_JAR=$(ls target/aloha-*.jar)
+before_deploy:
+  - rvm 1.9.3 do gem install octokit -v 4.3.0
+  - export DEPLOY_JAR=$(ls target/aloha-*.jar)
 deploy:
   provider: releases
   api_key:
