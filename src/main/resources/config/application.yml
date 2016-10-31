@@ -18,7 +18,7 @@ infinispan:
     readthrough:
       name: readthrough
       mode: DIST_ASYNC
-      enabled: true
+      enabled: false
       preload: false
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
