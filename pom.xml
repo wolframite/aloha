@@ -6,7 +6,7 @@
 
     <groupId>com.zalora.shop</groupId>
     <artifactId>aloha</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -66,14 +66,14 @@
         <dependency>
             <groupId>com.github.zalora</groupId>
             <artifactId>jmemcached</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
 
         <!--
         <dependency>
             <groupId>com.zalora.jmemcached</groupId>
             <artifactId>jmemcached-core</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
         -->
 

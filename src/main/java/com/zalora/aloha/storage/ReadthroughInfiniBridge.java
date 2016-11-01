@@ -30,7 +30,7 @@ public class ReadthroughInfiniBridge extends AbstractInfiniBridge {
     public LocalCacheElement get(Object key) {
         final String localKey = (String) key;
         CacheEntry<String, Item> ce = ispanCache.getCacheEntry(key);
-        if (ce == null) {
+        if (ce == null || ce.getValue() == null) {
             return null;
         }
 
@@ -76,10 +76,9 @@ public class ReadthroughInfiniBridge extends AbstractInfiniBridge {
 
     private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, Item> cacheEntry) {
         EmbeddedMetadata md = (EmbeddedMetadata) cacheEntry.getMetadata();
+        long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
 
-        LocalCacheElement lce = new LocalCacheElement(
-            key, cacheEntry.getValue().getFlags(), md.lifespan(), 0
-        );
+        LocalCacheElement lce = new LocalCacheElement(key, cacheEntry.getValue().getFlags(), expiration, 0);
         lce.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue().getData()));
 
         return lce;

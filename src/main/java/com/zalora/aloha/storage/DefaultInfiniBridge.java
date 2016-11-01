@@ -32,7 +32,7 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     public LocalCacheElement get(Object key) {
         final String localKey = (String) key;
         CacheEntry<String, byte[]> ce = ispanCache.getCacheEntry(key);
-        if (ce == null) {
+        if (ce == null || ce.getValue() == null) {
             return null;
         }
 
@@ -95,9 +95,8 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
         MemcachedMetadata md = (MemcachedMetadata) cacheEntry.getMetadata();
 
-        LocalCacheElement item = new LocalCacheElement(
-            key, (int) md.flags(), md.lifespan(), 0
-        );
+        long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
+        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
         item.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue()));
 
         return item;
