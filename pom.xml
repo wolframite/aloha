@@ -19,6 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <infinispan.version>8.2.4.Final</infinispan.version>
     </properties>
 
     <repositories>
@@ -42,13 +43,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>8.2.4.Final</version>
+            <version>${infinispan.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-memcached</artifactId>
-            <version>8.2.4.Final</version>
+            <version>${infinispan.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
@@ -60,7 +61,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-jpa</artifactId>
-            <version>8.2.4.Final</version>
+            <version>${infinispan.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-persistence-soft-index</artifactId>
+            <version>${infinispan.version}</version>
         </dependency>
 
         <dependency>

@@ -9,11 +9,21 @@ infinispan:
       name: main
       mode: DIST_ASYNC
       enabled: true
+      passivation:
+        enabled: true
+        indexLocation: diskStore/primary/index
+        dataLocation: diskStore/primary/data
+        maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
 
     secondary:
       name: session
       mode: DIST_SYNC
       enabled: false
+      passivation:
+        enabled: false
+        indexLocation: diskStore/secondary/index
+        dataLocation: diskStore/secondary/data
+        maxSize: 20000 # Maximum amount of entries before eviction to disk store starts
 
     readthrough:
       name: readthrough

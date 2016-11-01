@@ -8,7 +8,10 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.eviction.EvictionStrategy;
+import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
+import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -82,6 +85,30 @@ public class CacheConfig {
     @Value("${infinispan.cluster.jgroups.config}")
     private String jgroupsConfig;
 
+    @Value("${infinispan.cache.primary.passivation.enabled}")
+    private boolean primaryPassivationEnabled;
+
+    @Value("${infinispan.cache.secondary.passivation.enabled}")
+    private boolean secondaryPassivationEnabled;
+
+    @Value("${infinispan.cache.primary.passivation.indexLocation}")
+    private String primaryIndexLocation;
+
+    @Value("${infinispan.cache.primary.passivation.dataLocation}")
+    private String primaryDataLocation;
+
+    @Value("${infinispan.cache.primary.passivation.maxSize}")
+    private int primaryMaxEntries;
+
+    @Value("${infinispan.cache.secondary.passivation.indexLocation}")
+    private String secondaryIndexLocation;
+
+    @Value("${infinispan.cache.secondary.passivation.dataLocation}")
+    private String secondaryDataLocation;
+
+    @Value("${infinispan.cache.secondary.passivation.maxSize}")
+    private int secondaryMaxEntries;
+
     @Autowired
     public CacheConfig(PropertyConfigurator propertyConfigurator) {
         Assert.notNull(propertyConfigurator, "One PropertyConfigurator has to be implemented");
@@ -113,9 +140,24 @@ public class CacheConfig {
             return;
         }
 
-        primaryCacheConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(primaryCacheMode)
-            .build();
+        ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
+        primaryCacheConfigurationBuilder
+            .clustering().cacheMode(primaryCacheMode);
+
+        if (primaryPassivationEnabled) {
+            primaryCacheConfigurationBuilder.persistence()
+                .passivation(true)
+                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
+                    .indexLocation(primaryIndexLocation)
+                    .dataLocation(primaryDataLocation)
+                    .syncWrites(false)
+                    .purgeOnStartup(true)
+                .eviction()
+                    .strategy(EvictionStrategy.LIRS)
+                    .size(primaryMaxEntries).type(EvictionType.COUNT);
+        }
+
+        primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
     }
 
     private void configureSecondaryCache() {
@@ -123,9 +165,23 @@ public class CacheConfig {
             return;
         }
 
-        secondaryCacheConfiguration = new ConfigurationBuilder()
-            .clustering().cacheMode(secondaryCacheMode)
-            .build();
+        ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
+        secondaryCacheConfigurationBuilder
+            .clustering().cacheMode(secondaryCacheMode);
+
+        if (secondaryPassivationEnabled) {
+            secondaryCacheConfigurationBuilder.persistence()
+                .passivation(true)
+                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
+                    .indexLocation(secondaryIndexLocation)
+                    .dataLocation(secondaryDataLocation)
+                    .purgeOnStartup(true)
+                .eviction()
+                    .strategy(EvictionStrategy.LIRS)
+                    .size(secondaryMaxEntries).type(EvictionType.COUNT);
+        }
+
+        secondaryCacheConfiguration = secondaryCacheConfigurationBuilder.build();
     }
 
     private void configureReadthroughCache() {
