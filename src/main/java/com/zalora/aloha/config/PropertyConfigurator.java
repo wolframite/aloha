@@ -31,17 +31,20 @@ public class PropertyConfigurator {
     @Value("${spring.jpa.properties.hibernate.dialect}")
     private String hibernateDialect;
 
+    @Value("${spring.datasource.driver-class-name}")
+    private String driverClassName;
+
     @PostConstruct
     public void init() {
         System.setProperty("spring.datasource.url", dbUrl);
         System.setProperty("spring.datasource.username", dbUsername);
         System.setProperty("spring.datasource.password", dbPassword);
+        System.setProperty("spring.datasource.driver-class-name", driverClassName);
 
         System.setProperty("spring.jpa.show-sql", showSql);
         System.setProperty("spring.jpa.hbm2ddl-auto", autoGenerate);
         System.setProperty("infinispan.cache.readthrough.entityClass", entityClass);
         System.setProperty("spring.jpa.properties.hibernate.dialect", hibernateDialect);
-
     }
 
 }

@@ -7,7 +7,7 @@
         <class>${infinispan.cache.readthrough.entityClass}</class>
         <properties>
             <property name="hibernate.connection.url" value="${spring.datasource.url}"/>
-            <property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
+            <property name="hibernate.connection.driver_class" value="${spring.datasource.driver-class-name}"/>
             <property name="hibernate.connection.username" value="${spring.datasource.username}"/>
             <property name="hibernate.connection.password" value="${spring.datasource.password}"/>
             <property name="hibernate.dialect" value="${spring.jpa.properties.hibernate.dialect}" />
