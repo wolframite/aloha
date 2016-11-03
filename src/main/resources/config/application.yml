@@ -9,6 +9,9 @@ infinispan:
       name: main
       mode: DIST_ASYNC
       enabled: true
+      l1:
+        enabled: true
+        lifespan: 7200 # lifespan in seconds
       passivation:
         enabled: true
         indexLocation: diskStore/primary/index
@@ -19,6 +22,9 @@ infinispan:
       name: session
       mode: DIST_SYNC
       enabled: false
+      l1:
+        enabled: true
+        lifespan: 7200 # lifespan in seconds
       passivation:
         enabled: false
         indexLocation: diskStore/secondary/index
@@ -33,6 +39,9 @@ infinispan:
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
+      l1:
+        enabled: true
+        lifespan: 7200 # lifespan in seconds
 
 memcached:
   host: 0.0.0.0

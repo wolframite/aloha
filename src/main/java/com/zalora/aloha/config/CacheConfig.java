@@ -1,5 +1,6 @@
 package com.zalora.aloha.config;
 
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class CacheConfig {
     @Getter
     private Configuration readthroughCacheConfiguration;
 
+    // General cluster configuration
     @Value("${infinispan.cluster.name}")
     private String clusterName;
 
@@ -85,6 +87,7 @@ public class CacheConfig {
     @Value("${infinispan.cluster.jgroups.config}")
     private String jgroupsConfig;
 
+    // Passivation configuration
     @Value("${infinispan.cache.primary.passivation.enabled}")
     private boolean primaryPassivationEnabled;
 
@@ -108,6 +111,25 @@ public class CacheConfig {
 
     @Value("${infinispan.cache.secondary.passivation.maxSize}")
     private int secondaryMaxEntries;
+
+    // L1 configuration
+    @Value("${infinispan.cache.primary.l1.enabled}")
+    private boolean primaryL1Enabled;
+
+    @Value("${infinispan.cache.secondary.l1.enabled}")
+    private boolean secondaryL1Enabled;
+
+    @Value("${infinispan.cache.readthrough.l1.enabled}")
+    private boolean readthroughL1Enabled;
+
+    @Value("${infinispan.cache.readthrough.l1.lifespan}")
+    private long primaryL1Lifespan;
+
+    @Value("${infinispan.cache.readthrough.l1.lifespan}")
+    private long secondaryL1Lifespan;
+
+    @Value("${infinispan.cache.readthrough.l1.lifespan}")
+    private long readthroughL1Lifespan;
 
     @Autowired
     public CacheConfig(PropertyConfigurator propertyConfigurator) {
@@ -144,6 +166,12 @@ public class CacheConfig {
         primaryCacheConfigurationBuilder
             .clustering().cacheMode(primaryCacheMode);
 
+        if (primaryL1Enabled) {
+            primaryCacheConfigurationBuilder.clustering().l1()
+                .enabled(true)
+                .lifespan(primaryL1Lifespan, TimeUnit.SECONDS);
+        }
+
         if (primaryPassivationEnabled) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
@@ -168,6 +196,12 @@ public class CacheConfig {
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
             .clustering().cacheMode(secondaryCacheMode);
+
+        if (secondaryL1Enabled) {
+            secondaryCacheConfigurationBuilder.clustering().l1()
+                .enabled(true)
+                .lifespan(secondaryL1Lifespan, TimeUnit.SECONDS);
+        }
 
         if (secondaryPassivationEnabled) {
             secondaryCacheConfigurationBuilder.persistence()
@@ -201,7 +235,8 @@ public class CacheConfig {
             return;
         }
 
-        readthroughCacheConfiguration = new ConfigurationBuilder()
+        ConfigurationBuilder readthroughCacheConfigurationBuilder = new ConfigurationBuilder();
+        readthroughCacheConfigurationBuilder
             .clustering().cacheMode(readthroughCacheMode)
             .persistence()
                 .passivation(false)
@@ -214,8 +249,15 @@ public class CacheConfig {
                     .entityClass(entityClass)
                     .fetchPersistentState(false)
                     .purgeOnStartup(false)
-                    .ignoreModifications(true)
-            .build();
+                    .ignoreModifications(true);
+
+        if (readthroughL1Enabled) {
+            readthroughCacheConfigurationBuilder.clustering().l1()
+                .enabled(true)
+                .lifespan(readthroughL1Lifespan, TimeUnit.SECONDS);
+        }
+
+        readthroughCacheConfiguration = readthroughCacheConfigurationBuilder.build();
     }
 
 }
