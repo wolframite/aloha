@@ -54,17 +54,17 @@ memcached:
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/bob_live_my?autoReconnect=true&useSSL=false"
-    username: root
+    url:
+    username:
     password:
-    driver-class-name: "com.mysql.jdbc.Driver"
-    testWhileIdle: true
-    validationQuery: SELECT 1
+    driver-class-name:
+    testWhileIdle: false
+    validationQuery:
 
   jpa:
     show-sql: false
-    hbm2ddl-auto: validate
-    properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    hbm2ddl-auto: none
+    properties.hibernate.dialect:
 
 server.port: 8090
 logging.level.root: INFO
