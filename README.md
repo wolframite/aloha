@@ -171,4 +171,17 @@ This file is already configured by the spring section of the application.yml
 
 The included jgroups.config.xml file is preconfigured to coordinate clustering via S3. 
 To activate it, point a path to your file in the infinispan.cluster section of the application.yml
- 
+
+## Monitoring
+
+All monitoring runs on the embedded untertow server, listening on `http://0.0.0.0:8090` by default.
+You can change this port in the `application.yml` (`server.port`).
+
+### Health
+
+For now we only have the health overview provided by spring at `/health`, which shows you if the system is up or
+not and the memory usage.
+
+### Jolokia
+
+For some more insight into the system and the cluster status, you can query jolokia at `/jolokia`
