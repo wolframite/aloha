@@ -41,8 +41,8 @@ Currently only the app name is defined here. If you wanted to add support for a 
 ### config/application.yml
 
 This is the heart of aloha, you can configure nearly every aspect of the app. You can override every
-setting in the application.yml via command-line properties. If you don't like the cluster name, start
-the app like that: 
+setting in the application.yml via command-line properties. If you don't like the cluster name (the default cluster name
+comes from the House of Kamehameha, a dynasty of Hawaiian Kings), start the app like that:
 
 `java -Dinfinispan.cluster.name=whyWouldYouDoThat -jar aloha.jar`
 
@@ -53,7 +53,7 @@ Just keep in mind not to override credentials via the command line.
 ```
 infinispan:
   cluster:
-    name: ElGordo
+    name: Kamehameha
     jgroups.config: jgroups.xml
 ```
 

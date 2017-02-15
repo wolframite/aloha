@@ -1,7 +1,7 @@
 ---
 infinispan:
   cluster:
-    name: ElGordo
+    name: Kamehameha
     jgroups.config:
 
   cache:
