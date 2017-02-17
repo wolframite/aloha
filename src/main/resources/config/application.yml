@@ -2,6 +2,7 @@
 infinispan:
   cluster:
     name: Kamehameha
+    statistics.enabled: false
     jgroups.config:
 
   cache:
@@ -9,6 +10,7 @@ infinispan:
       name: main
       mode: DIST_ASYNC
       enabled: true
+      statistics.enabled: false
       l1:
         enabled: true
         lifespan: 7200 # lifespan in seconds
@@ -22,6 +24,7 @@ infinispan:
       name: session
       mode: DIST_SYNC
       enabled: false
+      statistics.enabled: false
       l1:
         enabled: true
         lifespan: 7200 # lifespan in seconds
@@ -39,6 +42,7 @@ infinispan:
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
+      statistics.enabled: false
       l1:
         enabled: true
         lifespan: 7200 # lifespan in seconds

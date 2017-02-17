@@ -42,6 +42,10 @@ public class CacheConfig {
     private String clusterName;
 
     @Getter
+    @Value("${infinispan.cluster.statistics.enabled}")
+    private boolean globalStatisticsEnabled;
+
+    @Getter
     @Value("${infinispan.cache.primary.name}")
     private String primaryCacheName;
 
@@ -51,6 +55,10 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.primary.enabled}")
     private boolean primaryCacheEnabled;
+
+    @Getter
+    @Value("${infinispan.cache.primary.statistics.enabled}")
+    private boolean primaryStatisticsEnabled;
 
     @Getter
     @Value("${infinispan.cache.secondary.name}")
@@ -64,6 +72,10 @@ public class CacheConfig {
     private boolean secondaryCacheEnabled;
 
     @Getter
+    @Value("${infinispan.cache.secondary.statistics.enabled}")
+    private boolean secondaryStatisticsEnabled;
+
+    @Getter
     @Value("${infinispan.cache.readthrough.name}")
     private String readthroughCacheName;
 
@@ -73,6 +85,10 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.readthrough.enabled}")
     private boolean readthroughCacheEnabled;
+
+    @Getter
+    @Value("${infinispan.cache.readthrough.statistics.enabled}")
+    private boolean readthroughStatisticsEnabled;
 
     @Getter
     @Value("${infinispan.cache.readthrough.preload}")
@@ -145,7 +161,8 @@ public class CacheConfig {
         GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
         gcb.transport()
             .defaultTransport()
-            .clusterName(clusterName);
+            .clusterName(clusterName)
+            .globalJmxStatistics().enabled(globalStatisticsEnabled);
 
         if (!jgroupsConfig.equals("")) {
             gcb.transport().addProperty("configurationFile", jgroupsConfig);
@@ -164,7 +181,8 @@ public class CacheConfig {
 
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
         primaryCacheConfigurationBuilder
-            .clustering().cacheMode(primaryCacheMode);
+            .clustering().cacheMode(primaryCacheMode)
+            .jmxStatistics().enabled(primaryStatisticsEnabled);
 
         if (primaryL1Enabled) {
             primaryCacheConfigurationBuilder.clustering().l1()
@@ -195,7 +213,8 @@ public class CacheConfig {
 
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
-            .clustering().cacheMode(secondaryCacheMode);
+            .clustering().cacheMode(secondaryCacheMode)
+            .jmxStatistics().enabled(secondaryStatisticsEnabled);
 
         if (secondaryL1Enabled) {
             secondaryCacheConfigurationBuilder.clustering().l1()
@@ -238,6 +257,7 @@ public class CacheConfig {
         ConfigurationBuilder readthroughCacheConfigurationBuilder = new ConfigurationBuilder();
         readthroughCacheConfigurationBuilder
             .clustering().cacheMode(readthroughCacheMode)
+            .jmxStatistics().enabled(readthroughStatisticsEnabled)
             .persistence()
                 .passivation(false)
                 .addStore(JpaStoreConfigurationBuilder.class)
