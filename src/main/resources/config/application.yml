@@ -13,7 +13,7 @@ infinispan:
       statistics.enabled: false
       l1:
         enabled: true
-        lifespan: 7200 # lifespan in seconds
+        lifespan: 600 # lifespan in seconds
       passivation:
         enabled: true
         indexLocation: diskStore/primary/index
@@ -27,7 +27,7 @@ infinispan:
       statistics.enabled: false
       l1:
         enabled: true
-        lifespan: 7200 # lifespan in seconds
+        lifespan: 600 # lifespan in seconds
       passivation:
         enabled: false
         indexLocation: diskStore/secondary/index
@@ -45,7 +45,7 @@ infinispan:
       statistics.enabled: false
       l1:
         enabled: true
-        lifespan: 7200 # lifespan in seconds
+        lifespan: 600 # lifespan in seconds
 
 memcached:
   host: 0.0.0.0

@@ -207,3 +207,18 @@ infinispan:
     primary:
       statistics.enabled: false
 ```
+
+## Docker
+
+Docker is not supported yet, it was just added for testing, however it looks promising.
+Feel free to play around with the Dockerfile (which is very basic). We tried S3 and TCP, which both
+work nicely.
+
+### Run two docker instances
+
+```
+$ mvn clean package docker:build
+$ docker run --rm --name aloha1 -p 11211:11211 -d aloha
+$ docker run --rm --name aloha2 -p 11212:11211 --link aloha1 -d aloha
+```
+ 
