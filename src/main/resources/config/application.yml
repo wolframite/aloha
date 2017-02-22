@@ -12,6 +12,7 @@ infinispan:
       enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
+        concurrency: 1024
       statistics.enabled: true
       l1:
         enabled: true
@@ -29,6 +30,7 @@ infinispan:
       statistics.enabled: false
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
+        concurrency: 1024
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
@@ -49,6 +51,7 @@ infinispan:
       statistics.enabled: false
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
+        concurrency: 1024
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
@@ -78,3 +81,4 @@ spring:
 
 server.port: 8090
 logging.level.root: INFO
+management.security.enabled: false
