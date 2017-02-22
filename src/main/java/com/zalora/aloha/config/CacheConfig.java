@@ -52,6 +52,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.mode}")
     private CacheMode primaryCacheMode;
 
+    @Value("${infinispan.cache.primary.lock.timeout}")
+    private int primaryCacheLockTimeout;
+
     @Getter
     @Value("${infinispan.cache.primary.enabled}")
     private boolean primaryCacheEnabled;
@@ -67,6 +70,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.mode}")
     private CacheMode secondaryCacheMode;
 
+    @Value("${infinispan.cache.secondary.lock.timeout}")
+    private int secondaryCacheLockTimeout;
+
     @Getter
     @Value("${infinispan.cache.secondary.enabled}")
     private boolean secondaryCacheEnabled;
@@ -81,6 +87,9 @@ public class CacheConfig {
 
     @Value("${infinispan.cache.readthrough.mode}")
     private CacheMode readthroughCacheMode;
+
+    @Value("${infinispan.cache.readthrough.lock.timeout}")
+    private int readthroughCacheLockTimeout;
 
     @Getter
     @Value("${infinispan.cache.readthrough.enabled}")
@@ -182,6 +191,7 @@ public class CacheConfig {
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
         primaryCacheConfigurationBuilder
             .clustering().cacheMode(primaryCacheMode)
+            .locking().lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
             .jmxStatistics().enabled(primaryStatisticsEnabled);
 
         if (primaryL1Enabled) {
@@ -214,6 +224,7 @@ public class CacheConfig {
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
             .clustering().cacheMode(secondaryCacheMode)
+            .locking().lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
             .jmxStatistics().enabled(secondaryStatisticsEnabled);
 
         if (secondaryL1Enabled) {
@@ -257,6 +268,7 @@ public class CacheConfig {
         ConfigurationBuilder readthroughCacheConfigurationBuilder = new ConfigurationBuilder();
         readthroughCacheConfigurationBuilder
             .clustering().cacheMode(readthroughCacheMode)
+            .locking().lockAcquisitionTimeout(readthroughCacheLockTimeout, TimeUnit.SECONDS)
             .jmxStatistics().enabled(readthroughStatisticsEnabled)
             .persistence()
                 .passivation(false)

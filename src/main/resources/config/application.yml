@@ -10,7 +10,9 @@ infinispan:
       name: main
       mode: DIST_ASYNC
       enabled: true
-      statistics.enabled: false
+      lock:
+        timeout: 30 # Lock acquisition timeout in seconds
+      statistics.enabled: true
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
@@ -25,6 +27,8 @@ infinispan:
       mode: DIST_SYNC
       enabled: false
       statistics.enabled: false
+      lock:
+        timeout: 30 # Lock acquisition timeout in seconds
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
@@ -43,6 +47,8 @@ infinispan:
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
       statistics.enabled: false
+      lock:
+        timeout: 30 # Lock acquisition timeout in seconds
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
