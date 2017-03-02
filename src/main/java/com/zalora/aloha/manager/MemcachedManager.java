@@ -41,9 +41,17 @@ public class MemcachedManager {
         this.cacheConfig = cacheConfig;
         this.memcachedConfig = memcachedConfig;
 
-        primaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getPrimaryCache());
-        secondaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getSecondaryCache());
-        readthroughInfiniBridge = new ReadthroughInfiniBridge(cacheManager.getReadthroughCache());
+        if (cacheConfig.isPrimaryCacheEnabled()) {
+            primaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getPrimaryCache());
+        }
+
+        if (cacheConfig.isSecondaryCacheEnabled()) {
+            secondaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getSecondaryCache());
+        }
+
+        if (cacheConfig.isReadthroughCacheEnabled()) {
+            readthroughInfiniBridge = new ReadthroughInfiniBridge(cacheManager.getReadthroughCache());
+        }
     }
 
     @PostConstruct

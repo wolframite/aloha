@@ -3,10 +3,13 @@ package com.zalora.aloha.manager;
 import com.zalora.aloha.config.CacheConfig;
 import com.zalora.aloha.loader.Preloader;
 import com.zalora.aloha.models.entities.Item;
+import java.util.LinkedList;
+import java.util.List;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +22,10 @@ import org.springframework.util.Assert;
 @Component
 public class CacheManager {
 
-    private CacheConfig cacheConfig;
-
     @Getter
     private EmbeddedCacheManager embeddedCacheManager;
+
+    private CacheConfig cacheConfig;
 
     private Preloader preloader;
 
@@ -44,7 +47,6 @@ public class CacheManager {
             cacheConfig.isReadthroughCacheEnabled()
         );
 
-        String[] enabledCaches = new String[]{"", "", ""};
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
 
         // Configure primary cache
@@ -53,8 +55,6 @@ public class CacheManager {
                 cacheConfig.getPrimaryCacheName(),
                 cacheConfig.getPrimaryCacheConfiguration()
             );
-
-            enabledCaches[0] = cacheConfig.getPrimaryCacheName();
         }
 
         // Configure secondary cache
@@ -63,8 +63,6 @@ public class CacheManager {
                 cacheConfig.getSecondaryCacheName(),
                 cacheConfig.getSecondaryCacheConfiguration()
             );
-
-            enabledCaches[1] = cacheConfig.getSecondaryCacheName();
         }
 
         // Configure read through cache
@@ -76,11 +74,7 @@ public class CacheManager {
 
             // Preload items
             preloader.preLoad(cacheConfig.isPreload(), getReadthroughCache());
-
-            enabledCaches[2] = cacheConfig.getReadthroughCacheName();
         }
-
-        embeddedCacheManager.startCaches(enabledCaches);
     }
 
     public AdvancedCache<String, byte[]> getPrimaryCache() {

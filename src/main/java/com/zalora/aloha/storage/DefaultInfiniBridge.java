@@ -1,5 +1,6 @@
 package com.zalora.aloha.storage;
 
+import com.zalora.aloha.server.memcached.AlohaMetadata;
 import com.zalora.jmemcached.LocalCacheElement;
 import java.util.Collection;
 import java.util.Set;
@@ -10,7 +11,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.server.memcached.MemcachedMetadata;
-import org.infinispan.server.memcached.MemcachedMetadataBuilder;
 import org.jboss.netty.buffer.ChannelBuffers;
 
 /**
@@ -93,7 +93,7 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     }
 
     private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
-        MemcachedMetadata md = (MemcachedMetadata) cacheEntry.getMetadata();
+        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
 
         long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
         LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
@@ -104,16 +104,15 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
 
     private Metadata generateMetadata(Object localCacheElement) {
         LocalCacheElement lce = (LocalCacheElement) localCacheElement;
-        Metadata.Builder mmb = new MemcachedMetadataBuilder()
-            .flags(lce.getFlags())
-            .version(generateVersion());
+
+        MemcachedMetadata memcachedMetadata = new MemcachedMetadata(lce.getFlags(), generateVersion());
 
         long exp = lce.getExpire();
         if (exp > 0) {
-            mmb.lifespan(exp, TimeUnit.MILLISECONDS);
+            return memcachedMetadata.builder().lifespan(exp, TimeUnit.MILLISECONDS).build();
         }
 
-        return mmb.build();
+        return memcachedMetadata;
     }
 
     private byte[] getDataFromCacheElement(LocalCacheElement localCacheElement) {

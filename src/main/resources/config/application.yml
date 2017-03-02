@@ -2,23 +2,24 @@
 infinispan:
   cluster:
     name: Kamehameha
-    statistics.enabled: false
-    jgroups.config:
+    statistics.enabled: true
+    jgroups.config: /default-configs/default-jgroups-tcp.xml
 
   cache:
     primary:
       name: main
-      mode: DIST_ASYNC
+      mode: DIST_SYNC
       enabled: true
+      owners: 2 # Amount of nodes which store an item
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
       statistics.enabled: true
       l1:
-        enabled: true
+        enabled: false
         lifespan: 600 # lifespan in seconds
       passivation:
-        enabled: true
+        enabled: false
         indexLocation: diskStore/primary/index
         dataLocation: diskStore/primary/data
         maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
@@ -27,6 +28,7 @@ infinispan:
       name: session
       mode: DIST_SYNC
       enabled: false
+      owners: 2 # Amount of nodes which store an item
       statistics.enabled: false
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
@@ -42,8 +44,9 @@ infinispan:
 
     readthrough:
       name: readthrough
-      mode: DIST_ASYNC
+      mode: DIST_SYNC
       enabled: false
+      owners: 2 # Amount of nodes which store an item
       preload: false
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
@@ -82,3 +85,4 @@ spring:
 server.port: 8090
 logging.level.root: INFO
 management.security.enabled: false
+endpoints.shutdown.enabled: true

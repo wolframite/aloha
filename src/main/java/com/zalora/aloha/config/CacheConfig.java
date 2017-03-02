@@ -62,6 +62,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.enabled}")
     private boolean primaryCacheEnabled;
 
+    @Value("${infinispan.cache.primary.owners}")
+    private int primaryCacheOwners;
+
     @Getter
     @Value("${infinispan.cache.primary.statistics.enabled}")
     private boolean primaryStatisticsEnabled;
@@ -83,6 +86,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.enabled}")
     private boolean secondaryCacheEnabled;
 
+    @Value("${infinispan.cache.secondary.owners}")
+    private int secondaryCacheOwners;
+
     @Getter
     @Value("${infinispan.cache.secondary.statistics.enabled}")
     private boolean secondaryStatisticsEnabled;
@@ -103,6 +109,9 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.readthrough.enabled}")
     private boolean readthroughCacheEnabled;
+
+    @Value("${infinispan.cache.readthrough.owners}")
+    private int readthroughCacheOwners;
 
     @Getter
     @Value("${infinispan.cache.readthrough.statistics.enabled}")
@@ -187,6 +196,7 @@ public class CacheConfig {
         }
 
         globalConfiguration = gcb.build();
+
         configurePrimaryCache();
         configureSecondaryCache();
         configureReadthroughCache();
@@ -198,8 +208,11 @@ public class CacheConfig {
         }
 
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
+
         primaryCacheConfigurationBuilder
-            .clustering().cacheMode(primaryCacheMode)
+            .clustering()
+                .cacheMode(primaryCacheMode)
+                .hash().numOwners(primaryCacheOwners)
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
@@ -235,6 +248,7 @@ public class CacheConfig {
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
             .clustering().cacheMode(secondaryCacheMode)
+            .hash().numOwners(secondaryCacheOwners)
             .locking()
                 .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(secondaryCacheLockConcurrency)
@@ -281,6 +295,7 @@ public class CacheConfig {
         ConfigurationBuilder readthroughCacheConfigurationBuilder = new ConfigurationBuilder();
         readthroughCacheConfigurationBuilder
             .clustering().cacheMode(readthroughCacheMode)
+            .hash().numOwners(readthroughCacheOwners)
             .locking()
                 .lockAcquisitionTimeout(readthroughCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(readthroughCacheLockConcurrency)
