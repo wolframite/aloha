@@ -12,7 +12,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
-import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
+import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -128,8 +128,8 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.passivation.enabled}")
     private boolean secondaryPassivationEnabled;
 
-    @Value("${infinispan.cache.primary.passivation.indexLocation}")
-    private String primaryIndexLocation;
+    @Value("${infinispan.cache.primary.passivation.expiredLocation}")
+    private String primaryExpiredLocation;
 
     @Value("${infinispan.cache.primary.passivation.dataLocation}")
     private String primaryDataLocation;
@@ -137,8 +137,8 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.passivation.maxSize}")
     private int primaryMaxEntries;
 
-    @Value("${infinispan.cache.secondary.passivation.indexLocation}")
-    private String secondaryIndexLocation;
+    @Value("${infinispan.cache.secondary.passivation.expiredLocation}")
+    private String secondaryExpiredLocation;
 
     @Value("${infinispan.cache.secondary.passivation.dataLocation}")
     private String secondaryDataLocation;
@@ -214,10 +214,9 @@ public class CacheConfig {
         if (primaryPassivationEnabled) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
-                    .indexLocation(primaryIndexLocation)
-                    .dataLocation(primaryDataLocation)
-                    .syncWrites(false)
+                .addStore(LevelDBStoreConfigurationBuilder.class)
+                    .location(primaryDataLocation)
+                    .expiredLocation(primaryExpiredLocation)
                     .purgeOnStartup(true)
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)
@@ -249,9 +248,9 @@ public class CacheConfig {
         if (secondaryPassivationEnabled) {
             secondaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
-                    .indexLocation(secondaryIndexLocation)
-                    .dataLocation(secondaryDataLocation)
+                .addStore(LevelDBStoreConfigurationBuilder.class)
+                    .location(secondaryDataLocation)
+                    .expiredLocation(secondaryExpiredLocation)
                     .purgeOnStartup(true)
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)

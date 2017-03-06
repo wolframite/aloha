@@ -114,7 +114,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
         return null;
     }
 
-    protected EntryVersion generateVersion() {
+    EntryVersion generateVersion() {
         ComponentRegistry registry = ispanCache.getComponentRegistry();
         VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
         if (cacheVersionGenerator == null) {

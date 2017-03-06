@@ -88,14 +88,14 @@ infinispan:
       # http://infinispan.org/docs/stable/user_guide/user_guide.html#l1_caching
       l1:
         enabled: true
-        lifespan: 7200 # lifespan in seconds
+        lifespan: 600 # lifespan in seconds
 
       # Evicted entries are written to disk rather than deleted
       # http://infinispan.org/docs/stable/user_guide/user_guide.html#cache-passivation
       passivation:
         enabled: true
-        indexLocation: diskStore/primary/index
         dataLocation: diskStore/primary/data
+        expiredLocation: diskStore/primary/expired
         maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
 ```
 
@@ -122,6 +122,13 @@ infinispan:
       persistenceUnitName: org.infinispan.persistence.jpa
 
 ```
+
+##### Passivation
+
+Due to a bug in the implementation, we don't use soft-index-filestore anymore,
+but replaced it with LevelDB. We are using passivation mainly as a failsave to prevent
+OOM-Exceptions. The performance penalty when passivating 50% of the keys is between 2x-4x
+slower than serving data directly from memory.
 
 #### memcached
 
@@ -170,7 +177,9 @@ This file is already configured by the spring section of the application.yml
 ### jgroups.config.xml
 
 The included jgroups.config.xml file is preconfigured to coordinate clustering via S3. 
-To activate it, point a path to your file in the infinispan.cluster section of the application.yml
+To activate it, point a path to your file in the infinispan.cluster section of the application.yml.
+In one of the next releases we will remove the jgroups.config.xml file and start using the config file
+which comes with the infinispan-core package (/default-configs/default-jgroups-(ec2|google|tcp|udp).xml)
 
 ## Monitoring
 
@@ -210,9 +219,7 @@ infinispan:
 
 ## Docker
 
-Docker is not supported yet, it was just added for testing, however it looks promising.
-Feel free to play around with the Dockerfile (which is very basic). We tried S3 and TCP, which both
-work nicely.
+Feel free to play around with the Dockerfile (which is very basic). We tried S3 and TCP, which both work nicely.
 
 ### Run two docker instances
 

@@ -19,15 +19,15 @@ infinispan:
         lifespan: 600 # lifespan in seconds
       passivation:
         enabled: false
-        indexLocation: diskStore/primary/index
         dataLocation: diskStore/primary/data
+        expiredLocation: diskStore/primary/expired
         maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
 
     secondary:
       name: session
       mode: DIST_SYNC
       enabled: false
-      statistics.enabled: false
+      statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
@@ -36,19 +36,19 @@ infinispan:
         lifespan: 600 # lifespan in seconds
       passivation:
         enabled: false
-        indexLocation: diskStore/secondary/index
         dataLocation: diskStore/secondary/data
-        maxSize: 20000 # Maximum amount of entries before eviction to disk store starts
+        expiredLocation: diskStore/secondary/expired
+        maxSize: 10000 # Maximum amount of entries before eviction to disk store starts
 
     readthrough:
       name: readthrough
-      mode: DIST_ASYNC
+      mode: DIST_SYNC
       enabled: false
       preload: false
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
-      statistics.enabled: false
+      statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
