@@ -18,10 +18,9 @@ infinispan:
         enabled: true
         lifespan: 600 # lifespan in seconds
       passivation:
-        enabled: false
-        dataLocation: diskStore/primary/data
-        expiredLocation: diskStore/primary/expired
-        maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
+        enabled: true
+        dataLocation: diskStore/primary
+        maxSize: 805_306_368 # If the data uses up more than 768MB, passivation will start
 
     secondary:
       name: session
@@ -36,8 +35,7 @@ infinispan:
         lifespan: 600 # lifespan in seconds
       passivation:
         enabled: false
-        dataLocation: diskStore/secondary/data
-        expiredLocation: diskStore/secondary/expired
+        dataLocation: diskStore/secondary
         maxSize: 10000 # Maximum amount of entries before eviction to disk store starts
 
     readthrough:

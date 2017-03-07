@@ -128,17 +128,11 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.passivation.enabled}")
     private boolean secondaryPassivationEnabled;
 
-    @Value("${infinispan.cache.primary.passivation.expiredLocation}")
-    private String primaryExpiredLocation;
-
     @Value("${infinispan.cache.primary.passivation.dataLocation}")
     private String primaryDataLocation;
 
     @Value("${infinispan.cache.primary.passivation.maxSize}")
-    private int primaryMaxEntries;
-
-    @Value("${infinispan.cache.secondary.passivation.expiredLocation}")
-    private String secondaryExpiredLocation;
+    private int primaryMaxSize;
 
     @Value("${infinispan.cache.secondary.passivation.dataLocation}")
     private String secondaryDataLocation;
@@ -214,13 +208,11 @@ public class CacheConfig {
         if (primaryPassivationEnabled) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                .addStore(LevelDBStoreConfigurationBuilder.class)
+                    .addSingleFileStore()
                     .location(primaryDataLocation)
-                    .expiredLocation(primaryExpiredLocation)
-                    .purgeOnStartup(true)
                 .eviction()
-                    .strategy(EvictionStrategy.LIRS)
-                    .size(primaryMaxEntries).type(EvictionType.COUNT);
+                    .strategy(EvictionStrategy.LRU)
+                    .size(primaryMaxSize).type(EvictionType.MEMORY);
         }
 
         primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
@@ -248,10 +240,8 @@ public class CacheConfig {
         if (secondaryPassivationEnabled) {
             secondaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                .addStore(LevelDBStoreConfigurationBuilder.class)
-                    .location(secondaryDataLocation)
-                    .expiredLocation(secondaryExpiredLocation)
-                    .purgeOnStartup(true)
+                    .addSingleFileStore()
+                    .location(primaryDataLocation)
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)
                     .size(secondaryMaxEntries).type(EvictionType.COUNT);
