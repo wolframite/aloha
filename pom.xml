@@ -6,12 +6,12 @@
 
     <groupId>com.zalora.shop</groupId>
     <artifactId>aloha</artifactId>
-    <version>0.1.10</version>
+    <version>0.1.11</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.1.RELEASE</version>
+        <version>1.5.2.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -65,6 +65,12 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
+            <version>${infinispan.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-cdi-embedded</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
 
@@ -141,6 +147,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!--
+                <configuration>
+                    <executable>true</executable>
+                </configuration>
+                -->
             </plugin>
 
             <plugin>

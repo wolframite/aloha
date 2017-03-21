@@ -37,14 +37,13 @@ public class CacheManager {
 
     @PostConstruct
     public void init() {
-        // At least one cache should be running
         Assert.isTrue(
             cacheConfig.isPrimaryCacheEnabled() ||
             cacheConfig.isSecondaryCacheEnabled() ||
-            cacheConfig.isReadthroughCacheEnabled()
+            cacheConfig.isReadthroughCacheEnabled(),
+        "At least one Cache must be enabled"
         );
 
-        String[] enabledCaches = new String[]{"", "", ""};
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
 
         // Configure primary cache
@@ -53,8 +52,6 @@ public class CacheManager {
                 cacheConfig.getPrimaryCacheName(),
                 cacheConfig.getPrimaryCacheConfiguration()
             );
-
-            enabledCaches[0] = cacheConfig.getPrimaryCacheName();
         }
 
         // Configure secondary cache
@@ -63,8 +60,6 @@ public class CacheManager {
                 cacheConfig.getSecondaryCacheName(),
                 cacheConfig.getSecondaryCacheConfiguration()
             );
-
-            enabledCaches[1] = cacheConfig.getSecondaryCacheName();
         }
 
         // Configure read through cache
@@ -76,24 +71,20 @@ public class CacheManager {
 
             // Preload items
             preloader.preLoad(cacheConfig.isPreload(), getReadthroughCache());
-
-            enabledCaches[2] = cacheConfig.getReadthroughCacheName();
         }
-
-        embeddedCacheManager.startCaches(enabledCaches);
     }
 
-    public AdvancedCache<String, byte[]> getPrimaryCache() {
+    AdvancedCache<String, byte[]> getPrimaryCache() {
         Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getPrimaryCacheName());
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<String, byte[]> getSecondaryCache() {
+    AdvancedCache<String, byte[]> getSecondaryCache() {
         Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSecondaryCacheName());
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<String, Item> getReadthroughCache() {
+    AdvancedCache<String, Item> getReadthroughCache() {
         Cache<String, Item> cache = embeddedCacheManager.getCache(cacheConfig.getReadthroughCacheName());
         return cache.getAdvancedCache();
     }

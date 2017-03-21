@@ -12,6 +12,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
+import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfiguration;
 import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -131,11 +132,17 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.passivation.dataLocation}")
     private String primaryDataLocation;
 
+    @Value("${infinispan.cache.primary.passivation.expiredLocation}")
+    private String primaryExpiredLocation;
+
     @Value("${infinispan.cache.primary.passivation.maxSize}")
     private int primaryMaxSize;
 
     @Value("${infinispan.cache.secondary.passivation.dataLocation}")
     private String secondaryDataLocation;
+
+    @Value("${infinispan.cache.secondary.passivation.expiredLocation}")
+    private String secondaryExpiredLocation;
 
     @Value("${infinispan.cache.secondary.passivation.maxSize}")
     private int secondaryMaxEntries;
@@ -208,8 +215,11 @@ public class CacheConfig {
         if (primaryPassivationEnabled) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                    .addSingleFileStore()
+                    .addStore(LevelDBStoreConfigurationBuilder.class)
                     .location(primaryDataLocation)
+                    .expiredLocation(primaryExpiredLocation)
+                    .purgeOnStartup(true)
+
                 .eviction()
                     .strategy(EvictionStrategy.LRU)
                     .size(primaryMaxSize).type(EvictionType.MEMORY);
@@ -240,8 +250,11 @@ public class CacheConfig {
         if (secondaryPassivationEnabled) {
             secondaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                    .addSingleFileStore()
-                    .location(primaryDataLocation)
+                    .addStore(LevelDBStoreConfigurationBuilder.class)
+                    .location(secondaryDataLocation)
+                    .expiredLocation(secondaryExpiredLocation)
+                    .purgeOnStartup(true)
+
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)
                     .size(secondaryMaxEntries).type(EvictionType.COUNT);
