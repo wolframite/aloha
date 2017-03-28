@@ -52,6 +52,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.mode}")
     private CacheMode primaryCacheMode;
 
+    @Value("${infinispan.cache.primary.numOwners}")
+    private int primaryCacheNumOwners;
+
     @Value("${infinispan.cache.primary.lock.timeout}")
     private int primaryCacheLockTimeout;
 
@@ -75,6 +78,9 @@ public class CacheConfig {
 
     @Value("${infinispan.cache.secondary.mode}")
     private CacheMode secondaryCacheMode;
+
+    @Value("${infinispan.cache.secondary.numOwners}")
+    private int secondaryCacheNumOwners;
 
     @Value("${infinispan.cache.secondary.lock.timeout}")
     private int secondaryCacheLockTimeout;
@@ -202,7 +208,9 @@ public class CacheConfig {
 
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
         primaryCacheConfigurationBuilder
-            .clustering().cacheMode(primaryCacheMode)
+            .clustering()
+                .cacheMode(primaryCacheMode)
+                .hash().numOwners(primaryCacheNumOwners)
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
@@ -243,7 +251,9 @@ public class CacheConfig {
 
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
-            .clustering().cacheMode(secondaryCacheMode)
+            .clustering()
+                .cacheMode(secondaryCacheMode)
+                .hash().numOwners(secondaryCacheNumOwners)
             .locking()
                 .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(secondaryCacheLockConcurrency)

@@ -18,6 +18,7 @@ infinispan:
         enabled: true
         lifespan: 600 # lifespan in seconds
       persistence: false # Persists data between reboot
+      numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
         enabled: true
         dataLocation: diskStore/data/
@@ -35,6 +36,7 @@ infinispan:
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
+      numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
         enabled: false
         dataLocation: diskStore/secondary/data
