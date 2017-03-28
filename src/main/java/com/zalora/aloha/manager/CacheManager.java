@@ -74,17 +74,17 @@ public class CacheManager {
         }
     }
 
-    AdvancedCache<String, byte[]> getPrimaryCache() {
+    public AdvancedCache<String, byte[]> getPrimaryCache() {
         Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getPrimaryCacheName());
         return cache.getAdvancedCache();
     }
 
-    AdvancedCache<String, byte[]> getSecondaryCache() {
+    public AdvancedCache<String, byte[]> getSecondaryCache() {
         Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSecondaryCacheName());
         return cache.getAdvancedCache();
     }
 
-    AdvancedCache<String, Item> getReadthroughCache() {
+    public AdvancedCache<String, Item> getReadthroughCache() {
         Cache<String, Item> cache = embeddedCacheManager.getCache(cacheConfig.getReadthroughCacheName());
         return cache.getAdvancedCache();
     }

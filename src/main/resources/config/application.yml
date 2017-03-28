@@ -17,10 +17,11 @@ infinispan:
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
+      persistence: false # Persists data between reboot
       passivation:
         enabled: true
-        dataLocation: diskStore/primary/data
-        expiredLocation: diskStore/primary/expired
+        dataLocation: diskStore/data/
+        expiredLocation: diskStore/expired/
         maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 
     secondary:

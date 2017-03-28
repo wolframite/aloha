@@ -12,7 +12,6 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
-import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfiguration;
 import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +65,9 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.primary.statistics.enabled}")
     private boolean primaryStatisticsEnabled;
+
+    @Value("${infinispan.cache.primary.persistence}")
+    private boolean primaryPersistenceEnabled;
 
     @Getter
     @Value("${infinispan.cache.secondary.name}")
@@ -212,10 +214,10 @@ public class CacheConfig {
                 .lifespan(primaryL1Lifespan, TimeUnit.SECONDS);
         }
 
-        if (primaryPassivationEnabled) {
+        if (primaryPassivationEnabled || primaryPersistenceEnabled) {
             primaryCacheConfigurationBuilder.persistence()
-                .passivation(true)
-                    .addStore(LevelDBStoreConfigurationBuilder.class)
+                .passivation(primaryPassivationEnabled)
+                .addStore(LevelDBStoreConfigurationBuilder.class)
                     .location(primaryDataLocation)
                     .expiredLocation(primaryExpiredLocation)
                     .purgeOnStartup(true)
@@ -223,6 +225,12 @@ public class CacheConfig {
                 .eviction()
                     .strategy(EvictionStrategy.LRU)
                     .size(primaryMaxSize).type(EvictionType.MEMORY);
+
+            if (primaryPersistenceEnabled) {
+                primaryCacheConfigurationBuilder.persistence()
+                    .passivation(false)
+                    .stores().get(0).purgeOnStartup(false);
+            }
         }
 
         primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
