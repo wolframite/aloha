@@ -96,7 +96,7 @@ infinispan:
         enabled: true
         dataLocation: diskStore/primary/data
         expiredLocation: diskStore/primary/expired
-        maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
+        maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 ```
 
 The read through cache tries to get cache-misses from the database via a JPA connection:
@@ -129,6 +129,11 @@ Due to a bug in the implementation, we don't use soft-index-filestore anymore,
 but replaced it with LevelDB. We are using passivation mainly as a failsave to prevent
 OOM-Exceptions. The performance penalty when passivating 50% of the keys is between 2x-4x
 slower than serving data directly from memory.
+
+In the primary cache the passivation threshold is memory usage based, in the secondary cache it's 
+entry based. We are doing that because we want to limit the consumed memory in the main cache
+and prevent OOM. We're using the secondary cache as session storage, so the size is minimal, but
+we only want a certain number of sessions in memory and passivate the sessions created by bots.
 
 #### memcached
 
