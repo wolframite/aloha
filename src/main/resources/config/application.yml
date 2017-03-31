@@ -18,29 +18,31 @@ infinispan:
       l1:
         enabled: false
         lifespan: 600 # lifespan in seconds
+      persistence: false # Persists data between reboot
+      numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
-        enabled: false
-        indexLocation: diskStore/primary/index
-        dataLocation: diskStore/primary/data
-        maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
+        enabled: true
+        dataLocation: diskStore/data/
+        expiredLocation: diskStore/expired/
+        maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 
     secondary:
       name: session
       mode: DIST_SYNC
       enabled: false
-      owners: 2 # Amount of nodes which store an item
-      statistics.enabled: false
+      statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
       l1:
         enabled: true
         lifespan: 600 # lifespan in seconds
+      numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
         enabled: false
-        indexLocation: diskStore/secondary/index
         dataLocation: diskStore/secondary/data
-        maxSize: 20000 # Maximum amount of entries before eviction to disk store starts
+        expiredLocation: diskStore/secondary/expired
+        maxSize: 10000 # Maximum amount of entries before eviction to disk store starts
 
     readthrough:
       name: readthrough
@@ -51,7 +53,7 @@ infinispan:
       preloadPageSize: 5000
       entityClass: com.zalora.aloha.models.entities.Product
       persistenceUnitName: org.infinispan.persistence.jpa
-      statistics.enabled: false
+      statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024

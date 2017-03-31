@@ -40,11 +40,11 @@ public class CacheManager {
 
     @PostConstruct
     public void init() {
-        // At least one cache should be running
         Assert.isTrue(
             cacheConfig.isPrimaryCacheEnabled() ||
             cacheConfig.isSecondaryCacheEnabled() ||
-            cacheConfig.isReadthroughCacheEnabled()
+            cacheConfig.isReadthroughCacheEnabled(),
+        "At least one Cache must be enabled"
         );
 
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());

@@ -12,7 +12,8 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
-import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
+import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
+import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -52,6 +53,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.mode}")
     private CacheMode primaryCacheMode;
 
+    @Value("${infinispan.cache.primary.numOwners}")
+    private int primaryCacheNumOwners;
+
     @Value("${infinispan.cache.primary.lock.timeout}")
     private int primaryCacheLockTimeout;
 
@@ -69,12 +73,18 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.statistics.enabled}")
     private boolean primaryStatisticsEnabled;
 
+    @Value("${infinispan.cache.primary.persistence}")
+    private boolean primaryPersistenceEnabled;
+
     @Getter
     @Value("${infinispan.cache.secondary.name}")
     private String secondaryCacheName;
 
     @Value("${infinispan.cache.secondary.mode}")
     private CacheMode secondaryCacheMode;
+
+    @Value("${infinispan.cache.secondary.numOwners}")
+    private int secondaryCacheNumOwners;
 
     @Value("${infinispan.cache.secondary.lock.timeout}")
     private int secondaryCacheLockTimeout;
@@ -85,9 +95,6 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.secondary.enabled}")
     private boolean secondaryCacheEnabled;
-
-    @Value("${infinispan.cache.secondary.owners}")
-    private int secondaryCacheOwners;
 
     @Getter
     @Value("${infinispan.cache.secondary.statistics.enabled}")
@@ -137,20 +144,20 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.passivation.enabled}")
     private boolean secondaryPassivationEnabled;
 
-    @Value("${infinispan.cache.primary.passivation.indexLocation}")
-    private String primaryIndexLocation;
-
     @Value("${infinispan.cache.primary.passivation.dataLocation}")
     private String primaryDataLocation;
 
-    @Value("${infinispan.cache.primary.passivation.maxSize}")
-    private int primaryMaxEntries;
+    @Value("${infinispan.cache.primary.passivation.expiredLocation}")
+    private String primaryExpiredLocation;
 
-    @Value("${infinispan.cache.secondary.passivation.indexLocation}")
-    private String secondaryIndexLocation;
+    @Value("${infinispan.cache.primary.passivation.maxSize}")
+    private int primaryMaxSize;
 
     @Value("${infinispan.cache.secondary.passivation.dataLocation}")
     private String secondaryDataLocation;
+
+    @Value("${infinispan.cache.secondary.passivation.expiredLocation}")
+    private String secondaryExpiredLocation;
 
     @Value("${infinispan.cache.secondary.passivation.maxSize}")
     private int secondaryMaxEntries;
@@ -212,7 +219,7 @@ public class CacheConfig {
         primaryCacheConfigurationBuilder
             .clustering()
                 .cacheMode(primaryCacheMode)
-                .hash().numOwners(primaryCacheOwners)
+                .hash().numOwners(primaryCacheNumOwners)
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
@@ -224,17 +231,23 @@ public class CacheConfig {
                 .lifespan(primaryL1Lifespan, TimeUnit.SECONDS);
         }
 
-        if (primaryPassivationEnabled) {
+        if (primaryPassivationEnabled || primaryPersistenceEnabled) {
             primaryCacheConfigurationBuilder.persistence()
-                .passivation(true)
-                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
-                    .indexLocation(primaryIndexLocation)
-                    .dataLocation(primaryDataLocation)
-                    .syncWrites(false)
+                .passivation(primaryPassivationEnabled)
+                .addStore(LevelDBStoreConfigurationBuilder.class)
+                    .location(primaryDataLocation)
+                    .expiredLocation(primaryExpiredLocation)
                     .purgeOnStartup(true)
+
                 .eviction()
-                    .strategy(EvictionStrategy.LIRS)
-                    .size(primaryMaxEntries).type(EvictionType.COUNT);
+                    .strategy(EvictionStrategy.LRU)
+                    .size(primaryMaxSize).type(EvictionType.MEMORY);
+
+            if (primaryPersistenceEnabled) {
+                primaryCacheConfigurationBuilder.persistence()
+                    .passivation(false)
+                    .stores().get(0).purgeOnStartup(false);
+            }
         }
 
         primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
@@ -247,8 +260,9 @@ public class CacheConfig {
 
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
-            .clustering().cacheMode(secondaryCacheMode)
-            .hash().numOwners(secondaryCacheOwners)
+            .clustering()
+                .cacheMode(secondaryCacheMode)
+                .hash().numOwners(secondaryCacheNumOwners)
             .locking()
                 .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(secondaryCacheLockConcurrency)
@@ -263,10 +277,11 @@ public class CacheConfig {
         if (secondaryPassivationEnabled) {
             secondaryCacheConfigurationBuilder.persistence()
                 .passivation(true)
-                .addStore(SoftIndexFileStoreConfigurationBuilder.class)
-                    .indexLocation(secondaryIndexLocation)
-                    .dataLocation(secondaryDataLocation)
+                    .addStore(RocksDBStoreConfigurationBuilder.class)
+                    .location(secondaryDataLocation)
+                    .expiredLocation(secondaryExpiredLocation)
                     .purgeOnStartup(true)
+
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)
                     .size(secondaryMaxEntries).type(EvictionType.COUNT);

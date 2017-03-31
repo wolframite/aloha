@@ -88,15 +88,15 @@ infinispan:
       # http://infinispan.org/docs/stable/user_guide/user_guide.html#l1_caching
       l1:
         enabled: true
-        lifespan: 7200 # lifespan in seconds
+        lifespan: 600 # lifespan in seconds
 
       # Evicted entries are written to disk rather than deleted
       # http://infinispan.org/docs/stable/user_guide/user_guide.html#cache-passivation
       passivation:
         enabled: true
-        indexLocation: diskStore/primary/index
         dataLocation: diskStore/primary/data
-        maxSize: 300000 # Maximum amount of entries before eviction to disk store starts
+        expiredLocation: diskStore/primary/expired
+        maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 ```
 
 The read through cache tries to get cache-misses from the database via a JPA connection:
@@ -122,6 +122,18 @@ infinispan:
       persistenceUnitName: org.infinispan.persistence.jpa
 
 ```
+
+##### Passivation
+
+Due to a bug in the implementation, we don't use soft-index-filestore anymore,
+but replaced it with LevelDB. We are using passivation mainly as a failsave to prevent
+OOM-Exceptions. The performance penalty when passivating 50% of the keys is between 2x-4x
+slower than serving data directly from memory.
+
+In the primary cache the passivation threshold is memory usage based, in the secondary cache it's 
+entry based. We are doing that because we want to limit the consumed memory in the main cache
+and prevent OOM. We're using the secondary cache as session storage, so the size is minimal, but
+we only want a certain number of sessions in memory and passivate the sessions created by bots.
 
 #### memcached
 
@@ -170,7 +182,9 @@ This file is already configured by the spring section of the application.yml
 ### jgroups.config.xml
 
 The included jgroups.config.xml file is preconfigured to coordinate clustering via S3. 
-To activate it, point a path to your file in the infinispan.cluster section of the application.yml
+To activate it, point a path to your file in the infinispan.cluster section of the application.yml.
+In one of the next releases we will remove the jgroups.config.xml file and start using the config file
+which comes with the infinispan-core package (/default-configs/default-jgroups-(ec2|google|tcp|udp).xml)
 
 ## Monitoring
 
@@ -210,9 +224,7 @@ infinispan:
 
 ## Docker
 
-Docker is not supported yet, it was just added for testing, however it looks promising.
-Feel free to play around with the Dockerfile (which is very basic). We tried S3 and TCP, which both
-work nicely.
+Feel free to play around with the Dockerfile (which is very basic). We tried S3 and TCP, which both work nicely.
 
 ### Run two docker instances
 

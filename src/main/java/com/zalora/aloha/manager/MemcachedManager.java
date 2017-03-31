@@ -1,12 +1,12 @@
 package com.zalora.aloha.manager;
 
-import com.zalora.jmemcached.CacheImpl;
-import com.zalora.jmemcached.LocalCacheElement;
-import com.zalora.jmemcached.MemCacheDaemon;
 import com.zalora.aloha.config.CacheConfig;
 import com.zalora.aloha.config.MemcachedConfig;
 import com.zalora.aloha.storage.DefaultInfiniBridge;
 import com.zalora.aloha.storage.ReadthroughInfiniBridge;
+import com.zalora.jmemcached.CacheImpl;
+import com.zalora.jmemcached.LocalCacheElement;
+import com.zalora.jmemcached.MemCacheDaemon;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,11 +19,8 @@ import org.springframework.util.Assert;
 public class MemcachedManager {
 
     private CacheConfig cacheConfig;
+    private CacheManager cacheManager;
     private MemcachedConfig memcachedConfig;
-
-    private DefaultInfiniBridge primaryInfiniBridge;
-    private DefaultInfiniBridge secondaryInfiniBridge;
-    private ReadthroughInfiniBridge readthroughInfiniBridge;
 
     @Autowired
     public MemcachedManager(
@@ -39,19 +36,8 @@ public class MemcachedManager {
         );
 
         this.cacheConfig = cacheConfig;
+        this.cacheManager = cacheManager;
         this.memcachedConfig = memcachedConfig;
-
-        if (cacheConfig.isPrimaryCacheEnabled()) {
-            primaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getPrimaryCache());
-        }
-
-        if (cacheConfig.isSecondaryCacheEnabled()) {
-            secondaryInfiniBridge = new DefaultInfiniBridge(cacheManager.getSecondaryCache());
-        }
-
-        if (cacheConfig.isReadthroughCacheEnabled()) {
-            readthroughInfiniBridge = new ReadthroughInfiniBridge(cacheManager.getReadthroughCache());
-        }
     }
 
     @PostConstruct
@@ -61,7 +47,10 @@ public class MemcachedManager {
             mainMemcachedDaemon.setAddr(memcachedConfig.getPrimaryInetSocketAddress());
             mainMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
             mainMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            mainMemcachedDaemon.setCache(new CacheImpl(primaryInfiniBridge));
+            mainMemcachedDaemon.setCache(
+                new CacheImpl(new DefaultInfiniBridge(cacheManager.getPrimaryCache())
+            ));
+
             mainMemcachedDaemon.start();
         }
 
@@ -70,7 +59,10 @@ public class MemcachedManager {
             productMemcachedDaemon.setAddr(memcachedConfig.getSecondaryInetSocketAddress());
             productMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
             productMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            productMemcachedDaemon.setCache(new CacheImpl(secondaryInfiniBridge));
+            productMemcachedDaemon.setCache(
+                new CacheImpl(new DefaultInfiniBridge(cacheManager.getSecondaryCache())
+            ));
+
             productMemcachedDaemon.start();
         }
 
@@ -79,7 +71,9 @@ public class MemcachedManager {
             mainMemcachedDaemon.setAddr(memcachedConfig.getReadthroughInetSocketAddress());
             mainMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
             mainMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            mainMemcachedDaemon.setCache(new CacheImpl(readthroughInfiniBridge));
+            mainMemcachedDaemon.setCache(new CacheImpl(
+                new ReadthroughInfiniBridge(cacheManager.getReadthroughCache())
+            ));
             mainMemcachedDaemon.start();
         }
     }

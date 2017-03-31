@@ -12,6 +12,7 @@ import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.container.versioning.NumericVersionGenerator;
 import org.infinispan.container.versioning.VersionGenerator;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.springframework.util.Assert;
 
@@ -67,6 +68,11 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
     @Override
     public void clear() {
         ispanCache.clear();
+        ispanCache.getComponentRegistry().getComponent(PersistenceManager.class).clearAllStores(
+            PersistenceManager.AccessMode.PRIVATE
+        );
+
+        log.info("Flushed {} cache", ispanCache.getName());
     }
 
     @Override
@@ -114,7 +120,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
         return null;
     }
 
-    protected EntryVersion generateVersion() {
+    EntryVersion generateVersion() {
         ComponentRegistry registry = ispanCache.getComponentRegistry();
         VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
         if (cacheVersionGenerator == null) {
