@@ -12,7 +12,6 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
-import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
 import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -234,7 +233,7 @@ public class CacheConfig {
         if (primaryPassivationEnabled || primaryPersistenceEnabled) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(primaryPassivationEnabled)
-                .addStore(LevelDBStoreConfigurationBuilder.class)
+                .addStore(RocksDBStoreConfigurationBuilder.class)
                     .location(primaryDataLocation)
                     .expiredLocation(primaryExpiredLocation)
                     .purgeOnStartup(true)
