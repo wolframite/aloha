@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM isuper/java-oracle
 VOLUME /tmp
 ADD aloha-*.jar /aloha.jar
 RUN sh -c 'touch /aloha.jar'
