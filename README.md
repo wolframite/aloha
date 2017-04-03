@@ -54,16 +54,13 @@ Just keep in mind not to override credentials via the command line.
 infinispan:
   cluster:
     name: Kamehameha
-    jgroups.config: jgroups.xml
+    jgroups.config: 
 ```
 
-If you are using S3 to coordinate your cluster communication, the cluster name 
-is used as a folder. So if you have multiple clusters sharing the same S3 bucket,
-you won't have any interference. 
+By default `jgroups.config` is empty, but you can let it point to one of the jgroups.config 
+files, which come with infinispan: `/default-configs/default-jgroups-(tcp|udp|ec2|google|kubernetes).xml`
 
-by default `jgroups.config` is empty, but you can let it point to a jgroups.config file to
-configure e.g. the communication method of your cluster. aloha comes with a jgroups template to
-connect to S3. 
+If you want to use JDBC for coordination, check out the `jgroups-jdbc.xml` section. 
 
 We have three caches hardwired into the app:
 
@@ -179,12 +176,21 @@ spring:
 
 This file is already configured by the spring section of the application.yml
 
-### jgroups.config.xml
+### jgroups-jdbc.xml
 
-The included jgroups.config.xml file is preconfigured to coordinate clustering via S3. 
+The included jgroups-jdbc.xml file is preconfigured to coordinate clustering via JDBC. 
 To activate it, point a path to your file in the infinispan.cluster section of the application.yml.
-In one of the next releases we will remove the jgroups.config.xml file and start using the config file
-which comes with the infinispan-core package (/default-configs/default-jgroups-(ec2|google|tcp|udp).xml)
+
+You have to provide the following parameters, to make JDBC_PING work:
+
+| Name                | Variable                              | Default               | Example                            |
+|---------------------|---------------------------------------|-----------------------|------------------------------------|
+| Connection URL      | `${jgroups.jdbc.connection_url}`      |                       | jdbc:mysql://localhost/bob_live_sg |
+| Connection Username | `${jgroups.jdbc.connection_username}` |                       | root                               |
+| Connection Password | `${jgroups.jdbc.connection_password}` |                       | secret                             |
+| Connection Driver   | `${jgroups.jdbc.connection_driver}`   | com.mysql.jdbc.Driver | com.mysql.jdbc.Driver              |
+
+To activate the jgroups profile, the variable `infinispan.cluster.jgroups.config` has to be set to `jgroups-jdbc.xml` 
 
 ## Monitoring
 
