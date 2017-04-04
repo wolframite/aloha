@@ -27,12 +27,11 @@ read more about that here: https://github.com/zalora/jmemcached
 
 ## Configuration
 
-aloha has 4 configuration files: 
+aloha has 3 configuration files: 
 
 - bootstrap.yml
 - config/application.yml
-- META-INF/persistence.xml
-- jgroups.config.xml (Optional)
+- jgroups-jdbc.xml (Optional)
 
 ### bootstrap.yml
 
@@ -96,30 +95,6 @@ infinispan:
         maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 ```
 
-The read through cache tries to get cache-misses from the database via a JPA connection:
-
-```
-infinispan:
-  cache:
-    readthrough:
-      name: readthrough
-      mode: DIST_ASYNC
-      enabled: false
-      
-      # The preloader reads all items of the table and fills the store during startup
-      preload: false 
-      
-      # Chunk size to read data from the database  
-      preloadPageSize: 5000
-      
-      # JPA entity
-      entityClass: com.zalora.aloha.models.entities.Product
-      
-      # Name defined in the persistence.xml
-      persistenceUnitName: org.infinispan.persistence.jpa
-
-```
-
 ##### Passivation
 
 Due to a bug in the implementation, we don't use soft-index-filestore anymore,
@@ -146,35 +121,7 @@ memcached:
   port:
     primary : 11211
     secondary: 11212
-    readthrough: 11213
 ```
-
-#### spring
-
-Database settings:
-
-```
-spring:
-  datasource:
-    url: "jdbc:mysql://localhost:3306/bob_live_my?autoReconnect=true&useSSL=false"
-    username: root
-    password:
-    driver-class-name: "com.mysql.jdbc.Driver"
-    testWhileIdle: true
-    validationQuery: SELECT 1
-
-  jpa:
-    show-sql: false
-    
-    # Important to set to validate for production, other settings might change the table schema and/or data
-    hbm2ddl-auto: validate 
-
-    properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-```
-
-### persistence.xml
-
-This file is already configured by the spring section of the application.yml
 
 ### jgroups-jdbc.xml
 
@@ -190,7 +137,12 @@ You have to provide the following parameters, to make JDBC_PING work:
 | Connection Password | `${jgroups.jdbc.connection_password}` |                       | secret                             |
 | Connection Driver   | `${jgroups.jdbc.connection_driver}`   | com.mysql.jdbc.Driver | com.mysql.jdbc.Driver              |
 
-To activate the jgroups profile, the variable `infinispan.cluster.jgroups.config` has to be set to `jgroups-jdbc.xml` 
+To activate the JDBC jgroups profile, the variable `infinispan.cluster.jgroups.config` has to be set to `jgroups-jdbc.xml`
+
+### default-jgroups-ec2.xml
+
+The ec2 jgroups file was extracted from the infinispan-cloud package.
+To activate the S3 jgroups profile, the variable `infinispan.cluster.jgroups.config` has to be set to `default-jgroups-ec2.xml`
 
 ## Monitoring
 

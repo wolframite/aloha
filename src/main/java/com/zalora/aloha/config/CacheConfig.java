@@ -11,12 +11,9 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
-import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
 import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -33,9 +30,6 @@ public class CacheConfig {
 
     @Getter
     private Configuration secondaryCacheConfiguration;
-
-    @Getter
-    private Configuration readthroughCacheConfiguration;
 
     // General cluster configuration
     @Value("${infinispan.cluster.name}")
@@ -99,40 +93,6 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.statistics.enabled}")
     private boolean secondaryStatisticsEnabled;
 
-    @Getter
-    @Value("${infinispan.cache.readthrough.name}")
-    private String readthroughCacheName;
-
-    @Value("${infinispan.cache.readthrough.mode}")
-    private CacheMode readthroughCacheMode;
-
-    @Value("${infinispan.cache.readthrough.lock.timeout}")
-    private int readthroughCacheLockTimeout;
-
-    @Value("${infinispan.cache.readthrough.lock.concurrency}")
-    private int readthroughCacheLockConcurrency;
-
-    @Getter
-    @Value("${infinispan.cache.readthrough.enabled}")
-    private boolean readthroughCacheEnabled;
-
-    @Value("${infinispan.cache.readthrough.owners}")
-    private int readthroughCacheOwners;
-
-    @Getter
-    @Value("${infinispan.cache.readthrough.statistics.enabled}")
-    private boolean readthroughStatisticsEnabled;
-
-    @Getter
-    @Value("${infinispan.cache.readthrough.preload}")
-    private boolean preload;
-
-    @Value("${infinispan.cache.readthrough.entityClass}")
-    private String entityClassName;
-
-    @Value("${infinispan.cache.readthrough.persistenceUnitName}")
-    private String persistenceUnitName;
-
     @Value("${infinispan.cluster.jgroups.config}")
     private String jgroupsConfig;
 
@@ -168,22 +128,11 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.l1.enabled}")
     private boolean secondaryL1Enabled;
 
-    @Value("${infinispan.cache.readthrough.l1.enabled}")
-    private boolean readthroughL1Enabled;
-
-    @Value("${infinispan.cache.readthrough.l1.lifespan}")
+    @Value("${infinispan.cache.primary.l1.lifespan}")
     private long primaryL1Lifespan;
 
-    @Value("${infinispan.cache.readthrough.l1.lifespan}")
+    @Value("${infinispan.cache.secondary.l1.lifespan}")
     private long secondaryL1Lifespan;
-
-    @Value("${infinispan.cache.readthrough.l1.lifespan}")
-    private long readthroughL1Lifespan;
-
-    @Autowired
-    public CacheConfig(PropertyConfigurator propertyConfigurator) {
-        Assert.notNull(propertyConfigurator, "One PropertyConfigurator has to be implemented");
-    }
 
     @PostConstruct
     public void init() {
@@ -205,7 +154,6 @@ public class CacheConfig {
 
         configurePrimaryCache();
         configureSecondaryCache();
-        configureReadthroughCache();
     }
 
     private void configurePrimaryCache() {
@@ -287,53 +235,6 @@ public class CacheConfig {
         }
 
         secondaryCacheConfiguration = secondaryCacheConfigurationBuilder.build();
-    }
-
-    private void configureReadthroughCache() {
-        if (!isReadthroughCacheEnabled()) {
-            return;
-        }
-
-        Class entityClass;
-
-        try {
-            entityClass = Class.forName(entityClassName);
-        } catch (ClassNotFoundException ex) {
-            log.error(
-                "Entity class {} could not be found, read through cache is not configured properly",
-                entityClassName, ex
-            );
-            return;
-        }
-
-        ConfigurationBuilder readthroughCacheConfigurationBuilder = new ConfigurationBuilder();
-        readthroughCacheConfigurationBuilder
-            .clustering().cacheMode(readthroughCacheMode)
-            .hash().numOwners(readthroughCacheOwners)
-            .locking()
-                .lockAcquisitionTimeout(readthroughCacheLockTimeout, TimeUnit.SECONDS)
-                .concurrencyLevel(readthroughCacheLockConcurrency)
-            .jmxStatistics().enabled(readthroughStatisticsEnabled)
-            .persistence()
-                .passivation(false)
-                .addStore(JpaStoreConfigurationBuilder.class)
-                    .shared(false)
-                    .preload(false)
-                    .batchSize(1)
-                    .persistenceUnitName(persistenceUnitName)
-                    .storeMetadata(false)
-                    .entityClass(entityClass)
-                    .fetchPersistentState(false)
-                    .purgeOnStartup(false)
-                    .ignoreModifications(true);
-
-        if (readthroughL1Enabled) {
-            readthroughCacheConfigurationBuilder.clustering().l1()
-                .enabled(true)
-                .lifespan(readthroughL1Lifespan, TimeUnit.SECONDS);
-        }
-
-        readthroughCacheConfiguration = readthroughCacheConfigurationBuilder.build();
     }
 
 }

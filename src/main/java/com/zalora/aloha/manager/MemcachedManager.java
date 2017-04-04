@@ -3,7 +3,6 @@ package com.zalora.aloha.manager;
 import com.zalora.aloha.config.CacheConfig;
 import com.zalora.aloha.config.MemcachedConfig;
 import com.zalora.aloha.storage.DefaultInfiniBridge;
-import com.zalora.aloha.storage.ReadthroughInfiniBridge;
 import com.zalora.jmemcached.CacheImpl;
 import com.zalora.jmemcached.LocalCacheElement;
 import com.zalora.jmemcached.MemCacheDaemon;
@@ -64,17 +63,6 @@ public class MemcachedManager {
             ));
 
             productMemcachedDaemon.start();
-        }
-
-        if (cacheConfig.isReadthroughCacheEnabled()) {
-            MemCacheDaemon<LocalCacheElement> mainMemcachedDaemon = new MemCacheDaemon<>();
-            mainMemcachedDaemon.setAddr(memcachedConfig.getReadthroughInetSocketAddress());
-            mainMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
-            mainMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            mainMemcachedDaemon.setCache(new CacheImpl(
-                new ReadthroughInfiniBridge(cacheManager.getReadthroughCache())
-            ));
-            mainMemcachedDaemon.start();
         }
     }
 

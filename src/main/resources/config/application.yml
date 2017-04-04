@@ -44,23 +44,6 @@ infinispan:
         expiredLocation: diskStore/secondary/expired
         maxSize: 10000 # Maximum amount of entries before eviction to disk store starts
 
-    readthrough:
-      name: readthrough
-      mode: DIST_SYNC
-      enabled: false
-      owners: 2 # Amount of nodes which store an item
-      preload: false
-      preloadPageSize: 5000
-      entityClass: com.zalora.aloha.models.entities.Product
-      persistenceUnitName: org.infinispan.persistence.jpa
-      statistics.enabled: true
-      lock:
-        timeout: 30 # Lock acquisition timeout in seconds
-        concurrency: 1024
-      l1:
-        enabled: true
-        lifespan: 600 # lifespan in seconds
-
 memcached:
   host: 0.0.0.0
   idleTime: 2000
@@ -68,21 +51,6 @@ memcached:
   port:
     primary : 11211
     secondary: 11212
-    readthrough: 11213
-
-spring:
-  datasource:
-    url:
-    username:
-    password:
-    driver-class-name:
-    testWhileIdle: false
-    validationQuery:
-
-  jpa:
-    show-sql: false
-    hbm2ddl-auto: none
-    properties.hibernate.dialect:
 
 server.port: 8090
 logging.level.root: INFO

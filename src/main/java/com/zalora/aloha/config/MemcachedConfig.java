@@ -18,9 +18,6 @@ public class MemcachedConfig {
     @Getter
     private InetSocketAddress secondaryInetSocketAddress;
 
-    @Getter
-    private InetSocketAddress readthroughInetSocketAddress;
-
     @Value("${memcached.host}")
     private String host;
 
@@ -29,9 +26,6 @@ public class MemcachedConfig {
 
     @Value("${memcached.port.secondary}")
     private int secondaryPort;
-
-    @Value("${memcached.port.readthrough}")
-    private int readthroughPort;
 
     @Getter
     @Value("${memcached.idleTime}")
@@ -45,7 +39,6 @@ public class MemcachedConfig {
     public void init() {
         primaryInetSocketAddress = new InetSocketAddress(host, primaryPort);
         secondaryInetSocketAddress = new InetSocketAddress(host, secondaryPort);
-        readthroughInetSocketAddress = new InetSocketAddress(host, readthroughPort);
     }
 
 }

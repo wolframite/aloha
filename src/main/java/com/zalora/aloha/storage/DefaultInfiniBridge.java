@@ -1,6 +1,5 @@
 package com.zalora.aloha.storage;
 
-import com.zalora.aloha.server.memcached.AlohaMetadata;
 import com.zalora.jmemcached.LocalCacheElement;
 import java.util.Collection;
 import java.util.Set;
@@ -93,10 +92,10 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     }
 
     private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
-        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
+        MemcachedMetadata md = (MemcachedMetadata) cacheEntry.getMetadata();
 
         long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
-        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
+        LocalCacheElement item = new LocalCacheElement(key, getFlags(md), expiration, 0);
         item.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue()));
 
         return item;
@@ -119,6 +118,17 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
         byte[] data = new byte[localCacheElement.getData().capacity()];
         localCacheElement.getData().getBytes(0, data);
         return data;
+    }
+
+    /**
+     * For now I'll just parse the flags from the toString() method, later I'll have to implement a
+     * new Metadata class. The 33 btw. comes from the prefix in the toString() method, which doesn't change
+     * @param memcachedMetadata
+     * @return
+     */
+    private long getFlags(MemcachedMetadata memcachedMetadata) {
+        String metaData = memcachedMetadata.toString();
+        return Long.parseLong(metaData.substring(33, metaData.indexOf(',')));
     }
 
 }
