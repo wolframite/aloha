@@ -3,11 +3,13 @@ package com.zalora.aloha.server.memcached;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.metadata.Metadata;
 
+import java.io.Serializable;
+
 /**
  * Same as MemcachedMetadata, only my version exposes the flags
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
-public class AlohaMetadata implements Metadata {
+public class AlohaMetadata implements Metadata, Serializable {
 
     protected final long flags;
     protected final EntryVersion version;
@@ -34,9 +36,7 @@ public class AlohaMetadata implements Metadata {
     }
 
     public Builder builder() {
-        return (new AlohaMetadataBuilder())
-            .flags(this.flags)
-            .version(this.version);
+        return (new AlohaMetadataBuilder()).flags(this.flags).version(this.version);
     }
 
     public boolean equals(Object o) {
@@ -44,7 +44,7 @@ public class AlohaMetadata implements Metadata {
             return true;
         } else if(o != null && this.getClass() == o.getClass()) {
             AlohaMetadata that = (AlohaMetadata) o;
-            return this.flags != that.flags ? false : this.version.equals(that.version);
+            return this.flags == that.flags && this.version.equals(that.version);
         } else {
             return false;
         }

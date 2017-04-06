@@ -59,9 +59,6 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.enabled}")
     private boolean primaryCacheEnabled;
 
-    @Value("${infinispan.cache.primary.owners}")
-    private int primaryCacheOwners;
-
     @Getter
     @Value("${infinispan.cache.primary.statistics.enabled}")
     private boolean primaryStatisticsEnabled;

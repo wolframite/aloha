@@ -47,6 +47,10 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
 
     @Override
     public LocalCacheElement put(String key, LocalCacheElement value) {
+        if (key.startsWith("rpc_")) {
+            return value;
+        }
+
         ispanCache.put(key, getDataFromCacheElement(value), generateMetadata(value));
         return value;
     }

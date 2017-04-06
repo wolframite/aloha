@@ -10,13 +10,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class AlohaExpirableMetadata extends AlohaMetadata {
 
-    protected final long lifespanTime;
-    protected final TimeUnit lifespanUnit;
+    private final long lifespanTime;
+    private final TimeUnit lifespanUnit;
 
     AlohaExpirableMetadata(long flags, EntryVersion version, long lifespanTime, TimeUnit lifespanUnit) {
         super(flags, version);
         this.lifespanTime = lifespanTime;
-        this.lifespanUnit = (TimeUnit) Objects.requireNonNull(lifespanUnit);
+        this.lifespanUnit = Objects.requireNonNull(lifespanUnit);
     }
 
     public long lifespan() {
@@ -38,7 +38,7 @@ public class AlohaExpirableMetadata extends AlohaMetadata {
                 return false;
             } else {
                 AlohaExpirableMetadata that = (AlohaExpirableMetadata) o;
-                return this.lifespanTime != that.lifespanTime ? false : this.lifespanUnit == that.lifespanUnit;
+                return this.lifespanTime == that.lifespanTime && this.lifespanUnit == that.lifespanUnit;
             }
         } else {
             return false;

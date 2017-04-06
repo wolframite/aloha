@@ -47,7 +47,7 @@
             interval="5000"
             timeout_check_interval="5000"
     />
-    <VERIFY_SUSPECT timeout="5000" use_icmp="true" />
+    <VERIFY_SUSPECT timeout="5000" />
     <pbcast.NAKACK2 use_mcast_xmit="false"
                     xmit_interval="100"
                     xmit_table_num_rows="50"
