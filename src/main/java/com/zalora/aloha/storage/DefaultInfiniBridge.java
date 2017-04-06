@@ -1,5 +1,6 @@
 package com.zalora.aloha.storage;
 
+import com.zalora.aloha.server.memcached.AlohaMetadata;
 import com.zalora.jmemcached.LocalCacheElement;
 import java.util.Collection;
 import java.util.Set;
@@ -9,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.infinispan.AdvancedCache;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.server.memcached.MemcachedMetadata;
 import org.jboss.netty.buffer.ChannelBuffers;
 
 /**
@@ -92,10 +92,10 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     }
 
     private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
-        MemcachedMetadata md = (MemcachedMetadata) cacheEntry.getMetadata();
+        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
 
         long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
-        LocalCacheElement item = new LocalCacheElement(key, getFlags(md), expiration, 0);
+        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
         item.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue()));
 
         return item;
@@ -104,31 +104,20 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     private Metadata generateMetadata(Object localCacheElement) {
         LocalCacheElement lce = (LocalCacheElement) localCacheElement;
 
-        MemcachedMetadata memcachedMetadata = new MemcachedMetadata(lce.getFlags(), generateVersion());
+        AlohaMetadata alohaMetadata = new AlohaMetadata(lce.getFlags(), generateVersion());
 
         long exp = lce.getExpire();
         if (exp > 0) {
-            return memcachedMetadata.builder().lifespan(exp, TimeUnit.MILLISECONDS).build();
+            return alohaMetadata.builder().lifespan(exp, TimeUnit.MILLISECONDS).build();
         }
 
-        return memcachedMetadata;
+        return alohaMetadata;
     }
 
     private byte[] getDataFromCacheElement(LocalCacheElement localCacheElement) {
         byte[] data = new byte[localCacheElement.getData().capacity()];
         localCacheElement.getData().getBytes(0, data);
         return data;
-    }
-
-    /**
-     * For now I'll just parse the flags from the toString() method, later I'll have to implement a
-     * new Metadata class. The 33 btw. comes from the prefix in the toString() method, which doesn't change
-     * @param memcachedMetadata
-     * @return
-     */
-    private long getFlags(MemcachedMetadata memcachedMetadata) {
-        String metaData = memcachedMetadata.toString();
-        return Long.parseLong(metaData.substring(33, metaData.indexOf(',')));
     }
 
 }
