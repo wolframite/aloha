@@ -10,7 +10,7 @@ infinispan:
       name: main
       mode: DIST_SYNC
       enabled: true
-      owners: 2 # Amount of nodes which store an item
+      stateTransferChunkSize: 128
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
@@ -21,7 +21,7 @@ infinispan:
       persistence: false # Persists data between reboot
       numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
-        enabled: true
+        enabled: false
         dataLocation: diskStore/data/
         expiredLocation: diskStore/expired/
         maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
@@ -30,6 +30,7 @@ infinispan:
       name: session
       mode: DIST_SYNC
       enabled: false
+      stateTransferChunkSize: 128
       statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds

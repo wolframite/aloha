@@ -9,6 +9,7 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
@@ -66,6 +67,9 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.persistence}")
     private boolean primaryPersistenceEnabled;
 
+    @Value("${infinispan.cache.primary.stateTransferChunkSize}")
+    private int primaryStateTransferChunkSize;
+
     @Getter
     @Value("${infinispan.cache.secondary.name}")
     private String secondaryCacheName;
@@ -90,8 +94,12 @@ public class CacheConfig {
     @Value("${infinispan.cache.secondary.statistics.enabled}")
     private boolean secondaryStatisticsEnabled;
 
+    @Value("${infinispan.cache.secondary.stateTransferChunkSize}")
+    private int secondaryStateTransferChunkSize;
+
     @Value("${infinispan.cluster.jgroups.config}")
     private String jgroupsConfig;
+
 
     // Passivation configuration
     @Value("${infinispan.cache.primary.passivation.enabled}")
@@ -143,6 +151,8 @@ public class CacheConfig {
             .clusterName(clusterName)
             .globalJmxStatistics().enabled(globalStatisticsEnabled);
 
+        gcb.shutdown().hookBehavior(ShutdownHookBehavior.REGISTER);
+
         if (!jgroupsConfig.equals("")) {
             gcb.transport().addProperty("configurationFile", jgroupsConfig);
         }
@@ -161,13 +171,16 @@ public class CacheConfig {
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
 
         primaryCacheConfigurationBuilder
-            .clustering()
-                .cacheMode(primaryCacheMode)
-                .hash().numOwners(primaryCacheNumOwners)
+            .clustering().cacheMode(primaryCacheMode)
+            .stateTransfer().chunkSize(128)
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
             .jmxStatistics().enabled(primaryStatisticsEnabled);
+
+        if (primaryCacheMode == CacheMode.DIST_ASYNC || primaryCacheMode == CacheMode.DIST_SYNC) {
+            primaryCacheConfigurationBuilder.clustering().hash().numOwners(primaryCacheNumOwners);
+        }
 
         if (primaryL1Enabled) {
             primaryCacheConfigurationBuilder.clustering().l1()
@@ -204,13 +217,15 @@ public class CacheConfig {
 
         ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
         secondaryCacheConfigurationBuilder
-            .clustering()
-                .cacheMode(secondaryCacheMode)
-                .hash().numOwners(secondaryCacheNumOwners)
+            .clustering().cacheMode(secondaryCacheMode)
             .locking()
                 .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(secondaryCacheLockConcurrency)
             .jmxStatistics().enabled(secondaryStatisticsEnabled);
+
+        if (secondaryCacheMode == CacheMode.DIST_ASYNC || secondaryCacheMode == CacheMode.DIST_SYNC) {
+            secondaryCacheConfigurationBuilder.clustering().hash().numOwners(secondaryCacheNumOwners);
+        }
 
         if (secondaryL1Enabled) {
             secondaryCacheConfigurationBuilder.clustering().l1()
