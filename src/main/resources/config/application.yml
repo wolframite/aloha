@@ -14,11 +14,9 @@ infinispan:
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
-      statistics.enabled: true
       l1:
         enabled: false
         lifespan: 600 # lifespan in seconds
-      persistence: false # Persists data between reboot
       numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
         enabled: false
@@ -31,16 +29,15 @@ infinispan:
       mode: DIST_SYNC
       enabled: false
       stateTransferChunkSize: 128
-      statistics.enabled: true
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
       l1:
-        enabled: true
+        enabled: false
         lifespan: 600 # lifespan in seconds
       numOwners: 3 # Amount of machines in the cluster storing the key
       passivation:
-        enabled: false
+        enabled: true
         dataLocation: diskStore/secondary/data
         expiredLocation: diskStore/secondary/expired
         maxSize: 10000 # Maximum amount of entries before eviction to disk store starts

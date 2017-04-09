@@ -60,13 +60,6 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.enabled}")
     private boolean primaryCacheEnabled;
 
-    @Getter
-    @Value("${infinispan.cache.primary.statistics.enabled}")
-    private boolean primaryStatisticsEnabled;
-
-    @Value("${infinispan.cache.primary.persistence}")
-    private boolean primaryPersistenceEnabled;
-
     @Value("${infinispan.cache.primary.stateTransferChunkSize}")
     private int primaryStateTransferChunkSize;
 
@@ -89,10 +82,6 @@ public class CacheConfig {
     @Getter
     @Value("${infinispan.cache.secondary.enabled}")
     private boolean secondaryCacheEnabled;
-
-    @Getter
-    @Value("${infinispan.cache.secondary.statistics.enabled}")
-    private boolean secondaryStatisticsEnabled;
 
     @Value("${infinispan.cache.secondary.stateTransferChunkSize}")
     private int secondaryStateTransferChunkSize;
@@ -176,19 +165,19 @@ public class CacheConfig {
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
-            .jmxStatistics().enabled(primaryStatisticsEnabled);
+                .jmxStatistics().enable();
 
         if (primaryCacheMode == CacheMode.DIST_ASYNC || primaryCacheMode == CacheMode.DIST_SYNC) {
             primaryCacheConfigurationBuilder.clustering().hash().numOwners(primaryCacheNumOwners);
         }
 
-        if (primaryL1Enabled) {
+        if (primaryL1Enabled && primaryCacheMode.friendlyCacheModeString().equals("DISTRIBUTED")) {
             primaryCacheConfigurationBuilder.clustering().l1()
                 .enabled(true)
                 .lifespan(primaryL1Lifespan, TimeUnit.SECONDS);
         }
 
-        if (primaryPassivationEnabled || primaryPersistenceEnabled) {
+        if (primaryPassivationEnabled && !primaryCacheMode.friendlyCacheModeString().equals("INVALIDATED")) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(primaryPassivationEnabled)
                 .addStore(RocksDBStoreConfigurationBuilder.class)
@@ -199,13 +188,9 @@ public class CacheConfig {
                 .eviction()
                     .strategy(EvictionStrategy.LRU)
                     .size(primaryMaxSize).type(EvictionType.MEMORY);
-
-            if (primaryPersistenceEnabled) {
-                primaryCacheConfigurationBuilder.persistence()
-                    .passivation(false)
-                    .stores().get(0).purgeOnStartup(false);
-            }
         }
+
+
 
         primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
     }
@@ -221,7 +206,7 @@ public class CacheConfig {
             .locking()
                 .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(secondaryCacheLockConcurrency)
-            .jmxStatistics().enabled(secondaryStatisticsEnabled);
+            .jmxStatistics().enable();
 
         if (secondaryCacheMode == CacheMode.DIST_ASYNC || secondaryCacheMode == CacheMode.DIST_SYNC) {
             secondaryCacheConfigurationBuilder.clustering().hash().numOwners(secondaryCacheNumOwners);

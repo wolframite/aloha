@@ -158,7 +158,7 @@ not and the memory usage.
 
 For some more insight into the system and the cluster status, you can query jolokia at `/jolokia`
 
-### Extended Statistics
+### Statistics
 
 To enable the global statistics, either modify the application.yml:
 
@@ -171,14 +171,7 @@ infinispan:
 
 or start aloha with the flag `-Dinfinispan.cluster.statistics.enabled=true`
 
-On top of the global statistics, you can also turn on statistics per cache here:
-
-```
-infinispan:
-  cache:
-    primary:
-      statistics.enabled: false
-```
+Cache statistics are always enabled
 
 ## Docker
 
