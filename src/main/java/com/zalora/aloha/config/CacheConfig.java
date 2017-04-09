@@ -12,6 +12,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
+import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
 import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class CacheConfig {
+
+    private static final String CACHE_MODE_DISTRIBUTED = "DISTRIBUTED";
+
+    private static final String CACHE_MODE_INVALIDATED = "INVALIDATED";
 
     @Getter
     private GlobalConfiguration globalConfiguration;
@@ -40,6 +45,10 @@ public class CacheConfig {
     @Value("${infinispan.cluster.statistics.enabled}")
     private boolean globalStatisticsEnabled;
 
+    @Value("${infinispan.cluster.jgroups.config}")
+    private String jgroupsConfig;
+
+    // Primary cache configuration
     @Getter
     @Value("${infinispan.cache.primary.name}")
     private String primaryCacheName;
@@ -63,6 +72,20 @@ public class CacheConfig {
     @Value("${infinispan.cache.primary.stateTransferChunkSize}")
     private int primaryStateTransferChunkSize;
 
+    // Primary invalidation settings
+    @Value("${infinispan.cache.invalidationJdbc.connectionUrl}")
+    private String primaryInvalidationConnectionUrl;
+
+    @Value("${infinispan.cache.invalidationJdbc.driverClass}")
+    private String primaryInvalidationDriverClass;
+
+    @Value("${infinispan.cache.invalidationJdbc.username}")
+    private String primaryInvalidationUsername;
+
+    @Value("${infinispan.cache.invalidationJdbc.password}")
+    private String primaryInvalidationPassword;
+
+    // Secondary cache configuration
     @Getter
     @Value("${infinispan.cache.secondary.name}")
     private String secondaryCacheName;
@@ -85,10 +108,6 @@ public class CacheConfig {
 
     @Value("${infinispan.cache.secondary.stateTransferChunkSize}")
     private int secondaryStateTransferChunkSize;
-
-    @Value("${infinispan.cluster.jgroups.config}")
-    private String jgroupsConfig;
-
 
     // Passivation configuration
     @Value("${infinispan.cache.primary.passivation.enabled}")
@@ -161,36 +180,50 @@ public class CacheConfig {
 
         primaryCacheConfigurationBuilder
             .clustering().cacheMode(primaryCacheMode)
-            .stateTransfer().chunkSize(128)
+            .stateTransfer().chunkSize(primaryStateTransferChunkSize)
             .locking()
                 .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
                 .concurrencyLevel(primaryCacheLockConcurrency)
                 .jmxStatistics().enable();
 
-        if (primaryCacheMode == CacheMode.DIST_ASYNC || primaryCacheMode == CacheMode.DIST_SYNC) {
+        if (primaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
             primaryCacheConfigurationBuilder.clustering().hash().numOwners(primaryCacheNumOwners);
         }
 
-        if (primaryL1Enabled && primaryCacheMode.friendlyCacheModeString().equals("DISTRIBUTED")) {
+        if (primaryL1Enabled && primaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
             primaryCacheConfigurationBuilder.clustering().l1()
                 .enabled(true)
                 .lifespan(primaryL1Lifespan, TimeUnit.SECONDS);
         }
 
-        if (primaryPassivationEnabled && !primaryCacheMode.friendlyCacheModeString().equals("INVALIDATED")) {
+        if (primaryPassivationEnabled && !primaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_INVALIDATED)) {
             primaryCacheConfigurationBuilder.persistence()
                 .passivation(primaryPassivationEnabled)
                 .addStore(RocksDBStoreConfigurationBuilder.class)
                     .location(primaryDataLocation)
                     .expiredLocation(primaryExpiredLocation)
                     .purgeOnStartup(true)
-
                 .eviction()
                     .strategy(EvictionStrategy.LRU)
                     .size(primaryMaxSize).type(EvictionType.MEMORY);
         }
 
-
+        if (primaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_INVALIDATED)) {
+            primaryCacheConfigurationBuilder.persistence().addStore(JdbcStringBasedStoreConfigurationBuilder.class)
+                .preload(true)
+                .shared(true)
+                .table()
+                    .createOnStart(true)
+                    .tableNamePrefix("aloha")
+                    .idColumnName("id").idColumnType("VARCHAR(255)")
+                    .dataColumnName("data").dataColumnType("MEDIUMBLOB")
+                    .timestampColumnName("expire").timestampColumnType("BIGINT")
+                .connectionPool()
+                    .connectionUrl(primaryInvalidationConnectionUrl)
+                    .username(primaryInvalidationUsername)
+                    .password(primaryInvalidationPassword)
+                    .driverClass(primaryInvalidationDriverClass);
+        }
 
         primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
     }
@@ -208,7 +241,7 @@ public class CacheConfig {
                 .concurrencyLevel(secondaryCacheLockConcurrency)
             .jmxStatistics().enable();
 
-        if (secondaryCacheMode == CacheMode.DIST_ASYNC || secondaryCacheMode == CacheMode.DIST_SYNC) {
+        if (secondaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
             secondaryCacheConfigurationBuilder.clustering().hash().numOwners(secondaryCacheNumOwners);
         }
 
@@ -225,7 +258,6 @@ public class CacheConfig {
                     .location(secondaryDataLocation)
                     .expiredLocation(secondaryExpiredLocation)
                     .purgeOnStartup(true)
-
                 .eviction()
                     .strategy(EvictionStrategy.LIRS)
                     .size(secondaryMaxEntries).type(EvictionType.COUNT);
