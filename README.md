@@ -32,6 +32,7 @@ aloha has 3 configuration files:
 - bootstrap.yml
 - config/application.yml
 - jgroups-jdbc.xml (Optional)
+- default-jgroups-ec2.xml (Optional)
 
 ### bootstrap.yml
 
