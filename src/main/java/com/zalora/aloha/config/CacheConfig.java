@@ -73,16 +73,16 @@ public class CacheConfig {
     private int primaryStateTransferChunkSize;
 
     // Primary invalidation settings
-    @Value("${infinispan.cache.invalidationJdbc.connectionUrl}")
+    @Value("${infinispan.cache.primary.invalidationJdbc.connectionUrl}")
     private String primaryInvalidationConnectionUrl;
 
-    @Value("${infinispan.cache.invalidationJdbc.driverClass}")
+    @Value("${infinispan.cache.primary.invalidationJdbc.driverClass}")
     private String primaryInvalidationDriverClass;
 
-    @Value("${infinispan.cache.invalidationJdbc.username}")
+    @Value("${infinispan.cache.primary.invalidationJdbc.username}")
     private String primaryInvalidationUsername;
 
-    @Value("${infinispan.cache.invalidationJdbc.password}")
+    @Value("${infinispan.cache.primary.invalidationJdbc.password}")
     private String primaryInvalidationPassword;
 
     // Secondary cache configuration
