@@ -6,7 +6,7 @@
 
     <groupId>com.zalora.shop</groupId>
     <artifactId>aloha</artifactId>
-    <version>0.3.3</version>
+    <version>0.3.4</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -21,6 +21,10 @@
         <java.version>1.8</java.version>
         <infinispan.version>9.0.0.Final</infinispan.version>
         <docker.image.prefix>zalora</docker.image.prefix>
+        <aloha.xmx>1G</aloha.xmx>
+        <aloha.xms>1G</aloha.xms>
+        <aloha.options>-server -Djava.net.preferIPv4Stack=true -Djgroups.tcp.address=SITE_LOCAL -Dserver.port=5000</aloha.options>
+        <aloha.cli></aloha.cli>
     </properties>
 
     <repositories>
@@ -152,6 +156,38 @@
                     </resources>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <exec executable="rm">
+                                    <arg line="-f target/Procfile" />
+                                </exec>
+
+                                <exec executable="echo" output="target/Procfile">
+                                    <arg line="web: java -Xmx${aloha.xmx} -Xms${aloha.xms} ${aloha.options} ${aloha.cli} -jar aloha-${project.version}.jar"/>
+                                </exec>
+
+                                <zip destfile="target/aloha-${project.version}.zip">
+                                    <fileset file="target/Procfile"/>
+                                    <fileset file="target/aloha-${project.version}.jar" />
+                                </zip>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 </project>
