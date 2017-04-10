@@ -62,12 +62,12 @@ files, which come with infinispan: `/default-configs/default-jgroups-(tcp|udp|ec
 
 If you want to use JDBC for coordination, check out the `jgroups-jdbc.xml` section. 
 
-We have three caches hardwired into the app:
+We have two caches hardwired into the app:
 
-|            | Primary Cache                 | Secondary Cache  | Read-Through Cache    |
-|------------|-------------------------------|------------------|-----------------------|
-| Usage      | Generic memcached replacement | Sessions         | Augment Primary Cache |
-| Cache Mode | Distributed Async             | Distributed Sync | Distributed Async     |
+|            | Primary Cache                 | Secondary Cache  |
+|------------|-------------------------------|------------------|
+| Usage      | Generic memcached replacement | Sessions         |
+| Cache Mode | Distributed Async             | Distributed Sync |
 
 This is the commented configuration of the primary cache:
 
@@ -95,6 +95,13 @@ infinispan:
         expiredLocation: diskStore/primary/expired
         maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
 ```
+
+Aloha supports all cache modes infinispan offers, if you want to read more about that, have
+a look at the official documentation: http://infinispan.org/docs/stable/user_guide/user_guide.html#clustering
+
+If you go for invalidation mode, you have to provide JDBC credentials, because you need a centralized 
+source of data. One problem we encountered with that mode is that it's a bad idea to call any count methods
+as they all iterate over the data rather than calling a database COUNT operation.
 
 ##### Passivation
 
@@ -185,4 +192,22 @@ $ mvn clean package docker:build
 $ docker run --rm --name aloha1 -p 11211:11211 -d aloha
 $ docker run --rm --name aloha2 -p 11212:11211 --link aloha1 -d aloha
 ```
- 
+
+## AWS ELastic Beanstalk
+
+aloha now creates a zip file, which contains the jar and a Procfile with starting instructions for the Amazon Elastic
+Beanstalk service.
+  
+The pom file contains two variables to configure the behaviour: 
+
+- `${aloha.options}` which holds some default settings
+- `${aloha.cli}` which is empty and can be overridden during the build and holds credentials
+
+This builds a zip package with JDBC coordination:
+
+```
+mvn clean package -Daloha.cli="-Djgroups.jdbc.connection_url=jdbc:mysql://myrdsinstance.c4puffe2gn4t.ap-southeast-1.rds.amazonaws.com:3306/test \
+                  -Djgroups.jdbc.connection_password=habbadahabbada -Dinfinispan.cluster.jgroups.config=jgroups-jdbc.xml"
+```
+
+It's pretty manual, but we didn't want to depend on another service like the spring config server etc.

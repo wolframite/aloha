@@ -24,7 +24,7 @@ infinispan:
         expiredLocation: diskStore/expired/
         maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
       invalidationJdbc:
-        connectionUrl: "jdbc:mysql://localhost/bob_live_sg?autoReconnect=true"
+        connectionUrl: "jdbc:mysql://localhost/mydb?autoReconnect=true"
         driverClass: "com.mysql.jdbc.Driver"
         username: root
         password:
