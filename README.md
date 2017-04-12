@@ -27,7 +27,7 @@ read more about that here: https://github.com/zalora/jmemcached
 
 ## Configuration
 
-aloha has 3 configuration files: 
+aloha has 4 configuration files: 
 
 - bootstrap.yml
 - config/application.yml
@@ -179,7 +179,7 @@ infinispan:
 
 or start aloha with the flag `-Dinfinispan.cluster.statistics.enabled=true`
 
-Cache statistics are always enabled
+Cache statistics are always enabled.
 
 ## Docker
 
