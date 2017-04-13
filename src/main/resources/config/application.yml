@@ -3,7 +3,7 @@ infinispan:
   cluster:
     name: Kamehameha
     statistics.enabled: true
-    jgroups.config: /default-configs/default-jgroups-tcp.xml
+    jgroups.config:
 
   cache:
     primary:

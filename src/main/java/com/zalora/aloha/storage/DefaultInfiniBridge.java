@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.metadata.Metadata;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -41,7 +42,7 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
     @Override
     public Collection<LocalCacheElement> getMulti(Set<String> set) {
         return ispanCache.getAllCacheEntries(set).entrySet().stream()
-            .map(entry -> generateLocalCacheItem(entry.getKey(), entry.getValue()))
+            .map(entry -> generateLocalCacheItemMulti(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
     }
 
@@ -101,6 +102,16 @@ public class DefaultInfiniBridge extends AbstractInfiniBridge {
         long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
         LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
         item.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue()));
+
+        return item;
+    }
+
+    private LocalCacheElement generateLocalCacheItemMulti(String key, CacheEntry<String, byte[]> cacheEntry) {
+        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
+
+        long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
+        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
+        item.setData(ChannelBuffers.copiedBuffer(((WrappedByteArray) ((Object) cacheEntry.getValue())).getBytes()));
 
         return item;
     }
