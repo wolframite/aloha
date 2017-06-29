@@ -1,13 +1,14 @@
 package com.zalora.aloha.manager;
 
 import com.zalora.aloha.config.CacheConfig;
-import javax.annotation.PostConstruct;
-import lombok.Getter;
+
+import com.zalora.aloha.memcached.MemcachedItem;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -17,24 +18,16 @@ import org.springframework.util.Assert;
 @Component
 public class CacheManager {
 
-    @Getter
     private EmbeddedCacheManager embeddedCacheManager;
-
     private CacheConfig cacheConfig;
 
     @Autowired
     public CacheManager(CacheConfig cacheConfig) {
-        Assert.notNull(cacheConfig, "Configuration could not be loaded");
-
-        this.cacheConfig = cacheConfig;
-    }
-
-    @PostConstruct
-    public void init() {
         Assert.isTrue(cacheConfig.isPrimaryCacheEnabled() || cacheConfig.isSecondaryCacheEnabled(),
             "At least one Cache must be enabled"
         );
 
+        this.cacheConfig = cacheConfig;
         embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
 
         // Configure primary cache
@@ -54,13 +47,28 @@ public class CacheManager {
         }
     }
 
-    public AdvancedCache<String, byte[]> getPrimaryCache() {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getPrimaryCacheName());
+    @Bean
+    EmbeddedCacheManager embeddedCacheManager() {
+        return embeddedCacheManager;
+    }
+
+    @Bean
+    public AdvancedCache<String, MemcachedItem> mainCache(EmbeddedCacheManager embeddedCacheManager) {
+        if (!cacheConfig.isPrimaryCacheEnabled()) {
+            return null;
+        }
+
+        Cache<String, MemcachedItem> cache = embeddedCacheManager.getCache(cacheConfig.getPrimaryCacheName());
         return cache.getAdvancedCache();
     }
 
-    public AdvancedCache<String, byte[]> getSecondaryCache() {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheConfig.getSecondaryCacheName());
+    @Bean
+    public AdvancedCache<String, MemcachedItem> sessionCache(EmbeddedCacheManager embeddedCacheManager) {
+        if (!cacheConfig.isSecondaryCacheEnabled()) {
+            return null;
+        }
+
+        Cache<String, MemcachedItem> cache = embeddedCacheManager.getCache(cacheConfig.getSecondaryCacheName());
         return cache.getAdvancedCache();
     }
 

@@ -1,69 +1,114 @@
 package com.zalora.aloha.manager;
 
+import com.zalora.aloha.compressor.Compressor;
+import com.zalora.aloha.compressor.NoCompressor;
 import com.zalora.aloha.config.CacheConfig;
 import com.zalora.aloha.config.MemcachedConfig;
+import com.zalora.aloha.memcached.MemcachedItem;
 import com.zalora.aloha.storage.DefaultInfiniBridge;
-import com.zalora.jmemcached.CacheImpl;
-import com.zalora.jmemcached.LocalCacheElement;
-import com.zalora.jmemcached.MemCacheDaemon;
-import javax.annotation.PostConstruct;
+import com.zalora.jmemcached.*;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.infinispan.AdvancedCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
+import java.net.InetSocketAddress;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
+@Slf4j
 @Component
 public class MemcachedManager {
 
+    private static final String DEFAULT_COMPRESSOR = "com.zalora.aloha.compressor.NoCompressor";
+
+    @Autowired
     private CacheConfig cacheConfig;
-    private CacheManager cacheManager;
+
+    @Autowired
     private MemcachedConfig memcachedConfig;
 
     @Autowired
-    public MemcachedManager(
-        CacheManager cacheManager,
-        CacheConfig cacheConfig,
-        MemcachedConfig memcachedConfig) {
+    private InetSocketAddress mainSocketAddress;
 
-        Assert.notNull(cacheManager, "Infinispan Cache Manager could not be loaded");
-        Assert.notNull(cacheConfig, "Infinispan Cache Configuration could not be loaded");
-        Assert.notNull(
-            memcachedConfig.getPrimaryInetSocketAddress(),
-            "Main Memcached listen address is not configured"
-        );
+    @Autowired
+    private InetSocketAddress sessionSocketAddress;
 
-        this.cacheConfig = cacheConfig;
-        this.cacheManager = cacheManager;
-        this.memcachedConfig = memcachedConfig;
-    }
+    @Autowired
+    private AdvancedCache<String, MemcachedItem> mainCache;
+
+    @Autowired
+    private AdvancedCache<String, MemcachedItem> sessionCache;
+
+    @Value("${infinispan.cache.primary.compressor}")
+    private String primaryCompressorClass;
+
+    @Value("${infinispan.cache.secondary.compressor}")
+    private String secondaryCompressorClass;
+
+    private Compressor primaryCompressor;
+    private Compressor secondaryCompressor;
+
+    @Getter
+    private MemCacheDaemon<LocalCacheElement> mainMemcachedDaemon;
+
+    @Getter
+    private MemCacheDaemon<LocalCacheElement> sessionMemcachedDaemon;
 
     @PostConstruct
     public void init() {
+        initCompressors();
+
         if (cacheConfig.isPrimaryCacheEnabled()) {
-            MemCacheDaemon<LocalCacheElement> mainMemcachedDaemon = new MemCacheDaemon<>();
-            mainMemcachedDaemon.setAddr(memcachedConfig.getPrimaryInetSocketAddress());
+            mainMemcachedDaemon = new MemCacheDaemon<>();
+            mainMemcachedDaemon.setAddr(mainSocketAddress);
             mainMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
             mainMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            mainMemcachedDaemon.setCache(
-                new CacheImpl(new DefaultInfiniBridge(cacheManager.getPrimaryCache())
-            ));
+            mainMemcachedDaemon.setCache(new CacheImpl(new DefaultInfiniBridge(mainCache, primaryCompressor)));
 
             mainMemcachedDaemon.start();
         }
 
         if (cacheConfig.isSecondaryCacheEnabled()) {
-            MemCacheDaemon<LocalCacheElement> productMemcachedDaemon = new MemCacheDaemon<>();
-            productMemcachedDaemon.setAddr(memcachedConfig.getSecondaryInetSocketAddress());
-            productMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
-            productMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
-            productMemcachedDaemon.setCache(
-                new CacheImpl(new DefaultInfiniBridge(cacheManager.getSecondaryCache())
-            ));
+            sessionMemcachedDaemon = new MemCacheDaemon<>();
+            sessionMemcachedDaemon.setAddr(sessionSocketAddress);
+            sessionMemcachedDaemon.setIdleTime(memcachedConfig.getIdleTime());
+            sessionMemcachedDaemon.setVerbose(memcachedConfig.isVerbose());
+            sessionMemcachedDaemon.setCache(new CacheImpl(new DefaultInfiniBridge(sessionCache, secondaryCompressor)));
 
-            productMemcachedDaemon.start();
+            sessionMemcachedDaemon.start();
         }
+    }
+
+    private void initCompressors() {
+        if (primaryCompressorClass.isEmpty()) {
+            primaryCompressorClass = DEFAULT_COMPRESSOR;
+        }
+
+        if (secondaryCompressorClass.isEmpty()) {
+            secondaryCompressorClass = DEFAULT_COMPRESSOR;
+        }
+
+        try {
+            primaryCompressor = (Compressor) Class.forName(primaryCompressorClass).newInstance();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            log.error("Could not instantiate {}, falling back to no compression", primaryCompressorClass);
+            primaryCompressor = new NoCompressor();
+        }
+
+        try {
+            secondaryCompressor = (Compressor) Class.forName(secondaryCompressorClass).newInstance();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            log.error("Could not instantiate {}, falling back to no compression", secondaryCompressorClass);
+            secondaryCompressor = new NoCompressor();
+        }
+
+        log.info("Primary Compressor: {}", primaryCompressor.getClass().getSimpleName());
+        log.info("Secondary Compressor: {}", secondaryCompressor.getClass().getSimpleName());
     }
 
 }

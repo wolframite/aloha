@@ -1,17 +1,15 @@
 package com.zalora.aloha.storage;
 
-import com.zalora.aloha.server.memcached.AlohaMetadata;
+import com.zalora.aloha.compressor.Compressor;
+import com.zalora.aloha.memcached.MemcachedItem;
 import com.zalora.jmemcached.LocalCacheElement;
+import lombok.extern.slf4j.Slf4j;
+import org.infinispan.AdvancedCache;
+import org.jboss.netty.buffer.ChannelBuffers;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.infinispan.AdvancedCache;
-import org.infinispan.commons.marshall.WrappedByteArray;
-import org.infinispan.container.entries.CacheEntry;
-import org.infinispan.metadata.Metadata;
-import org.jboss.netty.buffer.ChannelBuffers;
 
 /**
  * Hook up jMemcached and Infinispan
@@ -21,118 +19,105 @@ import org.jboss.netty.buffer.ChannelBuffers;
 @Slf4j
 public class DefaultInfiniBridge extends AbstractInfiniBridge {
 
-    private AdvancedCache<String, byte[]> ispanCache;
+    private AdvancedCache<String, MemcachedItem> cache;
+    private Compressor compressor;
 
-    public DefaultInfiniBridge(AdvancedCache<String, byte[]> ispanCache) {
-        super(ispanCache);
-        this.ispanCache = ispanCache;
+    public DefaultInfiniBridge(AdvancedCache<String, MemcachedItem> cache, Compressor compressor) {
+        super(cache);
+
+        this.cache = cache;
+        this.compressor = compressor;
     }
 
     @Override
     public LocalCacheElement get(Object key) {
-        final String localKey = (String) key;
-        CacheEntry<String, byte[]> ce = ispanCache.getCacheEntry(key);
-        if (ce == null || ce.getValue() == null) {
+        MemcachedItem item = cache.get(key);
+        if (item == null) {
             return null;
         }
 
-        return generateLocalCacheItem(localKey, ce);
+        compressor.afterGet(item);
+        return createLocalCacheElement(item);
     }
 
     @Override
-    public Collection<LocalCacheElement> getMulti(Set<String> set) {
-        return ispanCache.getAllCacheEntries(set).entrySet().stream()
-            .map(entry -> generateLocalCacheItemMulti(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
+    public Collection<LocalCacheElement> getMulti(Set<String> keys) {
+        return cache.getAll(keys).entrySet().stream()
+            .map(entry -> {
+                compressor.afterGet(entry.getValue());
+                return createLocalCacheElement(entry.getValue());
+            }).collect(Collectors.toList());
     }
 
     @Override
-    public LocalCacheElement put(String key, LocalCacheElement value) {
-        if (key.startsWith("rpc_")) {
-            return value;
+    public LocalCacheElement put(String key, LocalCacheElement localCacheElement) {
+        MemcachedItem memcachedItem = createMemcachedItem(localCacheElement);
+        compressor.beforePut(memcachedItem);
+
+        if (localCacheElement.getExpire() > 0) {
+            cache.put(key, memcachedItem, localCacheElement.getExpire(), TimeUnit.MILLISECONDS);
+            return null;
         }
 
-        ispanCache.put(key, getDataFromCacheElement(value), generateMetadata(value));
-        return value;
+        cache.put(key, memcachedItem);
+        return null;
     }
 
     @Override
     public boolean remove(Object key, Object localCacheElement) {
-        return ispanCache.remove(key, getDataFromCacheElement((LocalCacheElement) localCacheElement));
-    }
-
-    @Override
-    public boolean replace(String key, LocalCacheElement searchElement, LocalCacheElement replaceElement) {
-        return ispanCache.replace(
-            key,
-            getDataFromCacheElement(searchElement),
-            getDataFromCacheElement(replaceElement),
-            generateMetadata(replaceElement)
-        );
+        cache.removeAsync(key, createMemcachedItem((LocalCacheElement) localCacheElement));
+        return true;
     }
 
     @Override
     public LocalCacheElement replace(String key, LocalCacheElement localCacheElement) {
-        byte[] result = ispanCache.replace(
-            key,
-            getDataFromCacheElement(localCacheElement),
-            generateMetadata(localCacheElement)
-        );
+        MemcachedItem memcachedItem = createMemcachedItem(localCacheElement);
+        compressor.beforePut(memcachedItem);
 
-        if (result == null) {
+        cache.replace(key, memcachedItem, localCacheElement.getExpire(), TimeUnit.MILLISECONDS);
+        return null;
+    }
+
+    @Override
+    public boolean touch(String key, long expire) {
+        MemcachedItem item = cache.get(key);
+        if (item == null) {
+            return false;
+        }
+
+        item.setExpire(expire);
+        cache.replace(key, item, expire, TimeUnit.MILLISECONDS);
+        return true;
+    }
+
+    @Override
+    public LocalCacheElement putIfAbsent(String key, LocalCacheElement localCacheElement) {
+        MemcachedItem memcachedItem = createMemcachedItem(localCacheElement);
+        compressor.beforePut(memcachedItem);
+
+        if (localCacheElement.getExpire() > 0) {
+            cache.putIfAbsent(key, memcachedItem, localCacheElement.getExpire(), TimeUnit.MILLISECONDS);
             return null;
         }
+
+        cache.putIfAbsent(key, memcachedItem);
+        return null;
+    }
+
+    private LocalCacheElement createLocalCacheElement(MemcachedItem memcachedItem) {
+        LocalCacheElement localCacheElement = new LocalCacheElement(
+            memcachedItem.getKey(), memcachedItem.getFlags(), memcachedItem.getExpire(), 0
+        );
+        localCacheElement.setData(ChannelBuffers.copiedBuffer(memcachedItem.getData()));
 
         return localCacheElement;
     }
 
-    @Override
-    public LocalCacheElement putIfAbsent(String key, LocalCacheElement value) {
-        byte[] prev = ispanCache.putIfAbsent(key, getDataFromCacheElement(value), generateMetadata(value));
-        if (prev == null) {
-            return null;
-        }
+    private MemcachedItem createMemcachedItem(LocalCacheElement lce) {
+        byte[] data = new byte[lce.getData().capacity()];
+        lce.getData().getBytes(0, data);
 
-        return value;
-    }
-
-    private LocalCacheElement generateLocalCacheItem(String key, CacheEntry<String, byte[]> cacheEntry) {
-        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
-
-        long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
-        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
-        item.setData(ChannelBuffers.copiedBuffer(cacheEntry.getValue()));
-
-        return item;
-    }
-
-    private LocalCacheElement generateLocalCacheItemMulti(String key, CacheEntry<String, byte[]> cacheEntry) {
-        AlohaMetadata md = (AlohaMetadata) cacheEntry.getMetadata();
-
-        long expiration = md.lifespan() == -1 ? 0 : System.currentTimeMillis() + md.lifespan();
-        LocalCacheElement item = new LocalCacheElement(key, md.flags(), expiration, 0);
-        item.setData(ChannelBuffers.copiedBuffer(((WrappedByteArray) ((Object) cacheEntry.getValue())).getBytes()));
-
-        return item;
-    }
-
-    private Metadata generateMetadata(Object localCacheElement) {
-        LocalCacheElement lce = (LocalCacheElement) localCacheElement;
-
-        AlohaMetadata alohaMetadata = new AlohaMetadata(lce.getFlags(), generateVersion());
-
-        long exp = lce.getExpire();
-        if (exp > 0) {
-            return alohaMetadata.builder().lifespan(exp, TimeUnit.MILLISECONDS).build();
-        }
-
-        return alohaMetadata;
-    }
-
-    private byte[] getDataFromCacheElement(LocalCacheElement localCacheElement) {
-        byte[] data = new byte[localCacheElement.getData().capacity()];
-        localCacheElement.getData().getBytes(0, data);
-        return data;
+        return new MemcachedItem(lce.getKey(), data, lce.getFlags(), lce.getExpire());
     }
 
 }

@@ -1,10 +1,13 @@
 package com.zalora.aloha.controller;
 
 import com.zalora.aloha.config.CacheConfig;
-import com.zalora.aloha.manager.CacheManager;
+import com.zalora.aloha.manager.MemcachedManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -13,22 +16,44 @@ import org.springframework.web.bind.annotation.RestController;
 public class SystemController {
 
     @Autowired
-    private CacheManager cacheManager;
+    private EmbeddedCacheManager embeddedCacheManager;
+
+    @Autowired
+    private MemcachedManager memcachedManager;
 
     @Autowired
     private CacheConfig cacheConfig;
 
+    @Autowired
+    private ApplicationContext context;
+
     @RequestMapping("/exit")
     public void gracefulShutdown() {
-        if (cacheConfig.isPrimaryCacheEnabled()) {
-            cacheManager.getPrimaryCache().stop();
+        for (String cacheName : embeddedCacheManager.getCacheNames()) {
+            embeddedCacheManager.getCache(cacheName).stop();
         }
 
-        if (cacheConfig.isSecondaryCacheEnabled()) {
-            cacheManager.getSecondaryCache().stop();
+        if (memcachedManager.getMainMemcachedDaemon() != null) {
+            memcachedManager.getMainMemcachedDaemon().stop();
         }
 
-        cacheManager.getEmbeddedCacheManager().stop();
+        if (memcachedManager.getSessionMemcachedDaemon() != null) {
+            memcachedManager.getSessionMemcachedDaemon().stop();
+        }
+
+        embeddedCacheManager.stop();
+
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(500L);
+            } catch (InterruptedException var2) {
+                Thread.currentThread().interrupt();
+            }
+
+            SpringApplication.exit(context);
+        });
+        thread.setContextClassLoader(this.getClass().getClassLoader());
+        thread.start();
     }
 
 }

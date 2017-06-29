@@ -8,44 +8,25 @@ infinispan:
   cache:
     primary:
       name: main
-      mode: DIST_SYNC
+      mode: DIST_ASYNC
       enabled: true
+      numOwners: 3 # Amount of machines in the cluster storing the key
       stateTransferChunkSize: 128
+      compressor: com.zalora.aloha.compressor.Lz4
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
-      l1:
-        enabled: false
-        lifespan: 600 # lifespan in seconds
-      numOwners: 3 # Amount of machines in the cluster storing the key
-      passivation:
-        enabled: false
-        dataLocation: diskStore/data/
-        expiredLocation: diskStore/expired/
-        maxSize: 671_088_640 # If the data uses up more than 640MB, passivation will start
-      invalidationJdbc:
-        connectionUrl: "jdbc:mysql://localhost/mydb?autoReconnect=true"
-        driverClass: "com.mysql.jdbc.Driver"
-        username: root
-        password:
 
     secondary:
       name: session
       mode: DIST_SYNC
       enabled: false
+      numOwners: 3 # Amount of machines in the cluster storing the key
       stateTransferChunkSize: 128
+      compressor:
       lock:
         timeout: 30 # Lock acquisition timeout in seconds
         concurrency: 1024
-      l1:
-        enabled: false
-        lifespan: 600 # lifespan in seconds
-      numOwners: 3 # Amount of machines in the cluster storing the key
-      passivation:
-        enabled: true
-        dataLocation: diskStore/secondary/data
-        expiredLocation: diskStore/secondary/expired
-        maxSize: 10000 # Maximum amount of entries before eviction to disk store starts
 
 memcached:
   host: 0.0.0.0
@@ -55,7 +36,7 @@ memcached:
     primary : 11211
     secondary: 11212
 
-server.port: 8090
+server.port: 8080
 logging.level.root: INFO
 management.security.enabled: false
 endpoints.shutdown.enabled: true

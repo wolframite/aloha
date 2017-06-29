@@ -2,19 +2,11 @@ package com.zalora.aloha.storage;
 
 import com.zalora.jmemcached.LocalCacheElement;
 import com.zalora.jmemcached.storage.CacheStorage;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.AdvancedCache;
-import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.container.versioning.NumericVersionGenerator;
-import org.infinispan.container.versioning.VersionGenerator;
-import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.persistence.manager.PersistenceManager;
-import org.infinispan.remoting.rpc.RpcManager;
 import org.springframework.util.Assert;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Hook up jMemcached and Infinispan
@@ -24,11 +16,11 @@ import org.springframework.util.Assert;
 @Slf4j
 public abstract class AbstractInfiniBridge implements CacheStorage<String, LocalCacheElement> {
 
-    private AdvancedCache<String, ?> ispanCache;
+    private AdvancedCache<String, ?> cache;
 
-    AbstractInfiniBridge(AdvancedCache<String, ?> ispanCache) {
-        Assert.notNull(ispanCache, "Infinispan Cache must not be null");
-        this.ispanCache = ispanCache;
+    AbstractInfiniBridge(AdvancedCache<String, ?> cache) {
+        Assert.notNull(cache, "Infinispan Cache must not be null");
+        this.cache = cache;
     }
 
     @Override
@@ -37,7 +29,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
     }
 
     /**
-     * Number is wrong, but better than returning 0
+     * Return a rough estimate instead of zero
      */
     @Override
     public long getMemoryUsed() {
@@ -54,7 +46,7 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
 
     @Override
     public void close() throws IOException {
-        ispanCache.stop();
+        cache.stop();
     }
 
     /**
@@ -62,75 +54,62 @@ public abstract class AbstractInfiniBridge implements CacheStorage<String, Local
      */
     @Override
     public int size() {
-        return 0;
+        return cache.getStats().getCurrentNumberOfEntries();
     }
 
     @Override
     public void clear() {
-        ispanCache.clear();
-        ispanCache.getComponentRegistry().getComponent(PersistenceManager.class).clearAllStores(
-            PersistenceManager.AccessMode.PRIVATE
-        );
-
-        log.info("Flushed {} cache", ispanCache.getName());
+        cache.clear();
+        log.warn("Flushed {} cache", cache.getName());
     }
 
     @Override
     public boolean isEmpty() {
-        return ispanCache.isEmpty();
+        return cache.isEmpty();
     }
 
     @Override
     public boolean containsKey(Object key) {
-        return ispanCache.containsKey(key);
+        return cache.containsKey(key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return ispanCache.containsValue(value);
+        return cache.containsValue(value);
     }
 
     @Override
     public LocalCacheElement remove(Object key) {
-        String localKey = (String) key;
-        Object result = ispanCache.remove(localKey);
-        if (result == null) {
-            return null;
-        }
-
-        return new LocalCacheElement(localKey);
+        cache.removeAsync((String) key);
+        return null;
     }
 
+    /**
+     * Only replace by key is in use
+     */
+    @Override
+    public boolean replace(String key, LocalCacheElement searchElement, LocalCacheElement replaceElement) {
+        return false;
+    }
+
+    // The memcached protocol does not support those operations, so they're not implemented here
     @Override
     public void putAll(Map<? extends String, ? extends LocalCacheElement> map) {
     }
 
     @Override
     public Set<String> keySet() {
-        return null;
+        return new HashSet<>();
     }
 
     @Override
     public Collection<LocalCacheElement> values() {
-        return null;
+        return new HashSet<>();
     }
 
     @Override
     public Set<Entry<String, LocalCacheElement>> entrySet() {
-        return null;
-    }
-
-    EntryVersion generateVersion() {
-        ComponentRegistry registry = ispanCache.getComponentRegistry();
-        VersionGenerator cacheVersionGenerator = registry.getComponent(VersionGenerator.class);
-        if (cacheVersionGenerator == null) {
-            NumericVersionGenerator newVersionGenerator = new NumericVersionGenerator()
-                .clustered(registry.getComponent(RpcManager.class) != null);
-            registry.registerComponent(newVersionGenerator, VersionGenerator.class);
-            return newVersionGenerator.nonExistingVersion();
-        } else {
-            return cacheVersionGenerator.nonExistingVersion();
-        }
+        return new HashSet<>();
     }
 
 }
