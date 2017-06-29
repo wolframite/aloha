@@ -1,4 +1,4 @@
-# ALOHA [![Build Status](https://travis-ci.org/zalora/aloha.svg?branch=master)](https://travis-ci.org/zalora/aloha)
+# ALOHA
 
 ## What's with the name?
 
