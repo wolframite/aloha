@@ -6,27 +6,14 @@ infinispan:
     jgroups.config:
 
   cache:
-    primary:
-      name: main
-      mode: DIST_ASYNC
-      enabled: true
-      numOwners: 3 # Amount of machines in the cluster storing the key
-      stateTransferChunkSize: 128
-      compressor: com.zalora.aloha.compressor.Lz4
-      lock:
-        timeout: 30 # Lock acquisition timeout in seconds
-        concurrency: 1024
-
-    secondary:
-      name: session
-      mode: DIST_SYNC
-      enabled: false
-      numOwners: 3 # Amount of machines in the cluster storing the key
-      stateTransferChunkSize: 128
-      compressor:
-      lock:
-        timeout: 30 # Lock acquisition timeout in seconds
-        concurrency: 1024
+    name: main
+    mode: LOCAL
+    numOwners: 3 # Amount of machines in the cluster storing the key
+    stateTransferChunkSize: 128
+    compatibility: true
+    lock:
+      timeout: 30 # Lock acquisition timeout in seconds
+      concurrency: 1024
 
 memcached:
   host: 0.0.0.0

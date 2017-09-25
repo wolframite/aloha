@@ -26,69 +26,33 @@ public class CacheConfig {
     private GlobalConfiguration globalConfiguration;
 
     @Getter
-    private Configuration primaryCacheConfiguration;
-
-    @Getter
-    private Configuration secondaryCacheConfiguration;
+    private Configuration cacheConfiguration;
 
     // General cluster configuration
     @Value("${infinispan.cluster.name}")
     private String clusterName;
 
+    // Cache configuration
     @Getter
-    @Value("${infinispan.cluster.statistics.enabled}")
-    private boolean globalStatisticsEnabled;
+    @Value("${infinispan.cache.name}")
+    private String cacheName;
 
-    @Value("${infinispan.cluster.jgroups.config}")
-    private String jgroupsConfig;
+    @Value("${infinispan.cache.mode}")
+    private CacheMode cacheMode;
 
-    // Primary cache configuration
-    @Getter
-    @Value("${infinispan.cache.primary.name}")
-    private String primaryCacheName;
+    @Value("${infinispan.cache.numOwners}")
+    private int numOwners;
 
-    @Value("${infinispan.cache.primary.mode}")
-    private CacheMode primaryCacheMode;
+    @Value("${infinispan.cache.lock.timeout}")
+    private int lockTimeout;
 
-    @Value("${infinispan.cache.primary.numOwners}")
-    private int primaryCacheNumOwners;
+    @Value("${infinispan.cache.lock.concurrency}")
+    private int lockConcurrency;
 
-    @Value("${infinispan.cache.primary.lock.timeout}")
-    private int primaryCacheLockTimeout;
+    @Value("${infinispan.cache.stateTransferChunkSize}")
+    private int stateTransferChunkSize;
 
-    @Value("${infinispan.cache.primary.lock.concurrency}")
-    private int primaryCacheLockConcurrency;
-
-    @Getter
-    @Value("${infinispan.cache.primary.enabled}")
-    private boolean primaryCacheEnabled;
-
-    @Value("${infinispan.cache.primary.stateTransferChunkSize}")
-    private int primaryStateTransferChunkSize;
-
-    // Secondary cache configuration
-    @Getter
-    @Value("${infinispan.cache.secondary.name}")
-    private String secondaryCacheName;
-
-    @Value("${infinispan.cache.secondary.mode}")
-    private CacheMode secondaryCacheMode;
-
-    @Value("${infinispan.cache.secondary.numOwners}")
-    private int secondaryCacheNumOwners;
-
-    @Value("${infinispan.cache.secondary.lock.timeout}")
-    private int secondaryCacheLockTimeout;
-
-    @Value("${infinispan.cache.secondary.lock.concurrency}")
-    private int secondaryCacheLockConcurrency;
-
-    @Getter
-    @Value("${infinispan.cache.secondary.enabled}")
-    private boolean secondaryCacheEnabled;
-
-    @Value("${infinispan.cache.secondary.stateTransferChunkSize}")
-    private int secondaryStateTransferChunkSize;
+    private boolean compatibility;
 
     @PostConstruct
     public void init() {
@@ -96,60 +60,31 @@ public class CacheConfig {
         gcb.transport()
             .defaultTransport()
             .clusterName(clusterName)
-            .globalJmxStatistics().enabled(globalStatisticsEnabled);
+            .globalJmxStatistics().enable();
 
         gcb.shutdown().hookBehavior(ShutdownHookBehavior.REGISTER);
-
-        if (!jgroupsConfig.equals("")) {
-            gcb.transport().addProperty("configurationFile", jgroupsConfig);
-        }
-
         globalConfiguration = gcb.build();
 
         configurePrimaryCache();
-        configureSecondaryCache();
     }
 
     private void configurePrimaryCache() {
-        if (!isPrimaryCacheEnabled()) {
-            return;
-        }
-
         ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
 
         primaryCacheConfigurationBuilder
-            .clustering().cacheMode(primaryCacheMode)
-            .stateTransfer().chunkSize(primaryStateTransferChunkSize)
+            .compatibility().enabled(compatibility)
+            .clustering().cacheMode(cacheMode)
+                .stateTransfer().chunkSize(stateTransferChunkSize)
             .locking()
-                .lockAcquisitionTimeout(primaryCacheLockTimeout, TimeUnit.SECONDS)
-                .concurrencyLevel(primaryCacheLockConcurrency)
-                .jmxStatistics().enable();
-
-        if (primaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
-            primaryCacheConfigurationBuilder.clustering().hash().numOwners(primaryCacheNumOwners);
-        }
-
-        primaryCacheConfiguration = primaryCacheConfigurationBuilder.build();
-    }
-
-    private void configureSecondaryCache() {
-        if (!isSecondaryCacheEnabled()) {
-            return;
-        }
-
-        ConfigurationBuilder secondaryCacheConfigurationBuilder = new ConfigurationBuilder();
-        secondaryCacheConfigurationBuilder
-            .clustering().cacheMode(secondaryCacheMode)
-            .locking()
-                .lockAcquisitionTimeout(secondaryCacheLockTimeout, TimeUnit.SECONDS)
-                .concurrencyLevel(secondaryCacheLockConcurrency)
+                .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
+                .concurrencyLevel(lockConcurrency)
             .jmxStatistics().enable();
 
-        if (secondaryCacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
-            secondaryCacheConfigurationBuilder.clustering().hash().numOwners(secondaryCacheNumOwners);
+        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
+            primaryCacheConfigurationBuilder.clustering().hash().numOwners(numOwners);
         }
 
-        secondaryCacheConfiguration = secondaryCacheConfigurationBuilder.build();
+        cacheConfiguration = primaryCacheConfigurationBuilder.build();
     }
 
 }
