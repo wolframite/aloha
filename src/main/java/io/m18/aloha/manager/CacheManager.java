@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CacheManager {
+
     public static final String CACHE_NAME = "memcachedCache";
 
     private EmbeddedCacheManager embeddedCacheManager;

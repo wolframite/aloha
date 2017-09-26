@@ -65,26 +65,26 @@ public class CacheConfig {
         gcb.shutdown().hookBehavior(ShutdownHookBehavior.REGISTER);
         globalConfiguration = gcb.build();
 
-        configurePrimaryCache();
+        configureCache();
     }
 
-    private void configurePrimaryCache() {
-        ConfigurationBuilder primaryCacheConfigurationBuilder = new ConfigurationBuilder();
+    private void configureCache() {
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
-        primaryCacheConfigurationBuilder
+        configurationBuilder
             .compatibility().enabled(compatibility)
-            .clustering().cacheMode(cacheMode)
-                .stateTransfer().chunkSize(stateTransferChunkSize)
-            .locking()
-                .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
-                .concurrencyLevel(lockConcurrency)
+//            .clustering().cacheMode(cacheMode)
+//                .stateTransfer().chunkSize(stateTransferChunkSize)
+//            .locking()
+//                .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
+//                .concurrencyLevel(lockConcurrency)
             .jmxStatistics().enable();
 
-        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
-            primaryCacheConfigurationBuilder.clustering().hash().numOwners(numOwners);
-        }
+//        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
+//            configurationBuilder.clustering().hash().numOwners(numOwners);
+//        }
 
-        cacheConfiguration = primaryCacheConfigurationBuilder.build();
+        cacheConfiguration = configurationBuilder.build();
     }
 
 }

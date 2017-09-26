@@ -13,7 +13,6 @@
           "keys": ["committed", "used"]
         }
       ]
-
     },
     {
       "objectName": "java.lang:type=Runtime",
