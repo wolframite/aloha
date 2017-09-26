@@ -1,34 +1,39 @@
 package io.m18.aloha.manager;
 
-import io.m18.aloha.config.CacheConfig;
-
+import lombok.extern.slf4j.Slf4j;
 import org.infinispan.*;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
  */
+@Slf4j
 @Component
 public class CacheManager {
 
-    public static final String CACHE_NAME = "memcachedCache";
-
-    private EmbeddedCacheManager embeddedCacheManager;
-    private CacheConfig cacheConfig;
+    @Value("${infinispan.cache.name}")
+    private String cacheName;
 
     @Autowired
-    public CacheManager(CacheConfig cacheConfig) {
-        this.cacheConfig = cacheConfig;
-        embeddedCacheManager = new DefaultCacheManager(cacheConfig.getGlobalConfiguration());
+    private GlobalConfiguration globalConfiguration;
 
-        // Configure primary cache
+    @Autowired
+    private Configuration cacheConfiguration;
+
+    private EmbeddedCacheManager embeddedCacheManager;
+
+    @PostConstruct
+    public void init() {
+        embeddedCacheManager = new DefaultCacheManager(globalConfiguration);
         embeddedCacheManager.defineConfiguration(
-            cacheConfig.getCacheName(),
-            cacheConfig.getCacheConfiguration()
+            cacheName, cacheConfiguration
         );
     }
 
@@ -39,7 +44,7 @@ public class CacheManager {
 
     @Bean
     public AdvancedCache<String, byte[]> mainCache(EmbeddedCacheManager embeddedCacheManager) {
-        Cache<String, byte[]> cache = embeddedCacheManager.getCache(CACHE_NAME);
+        Cache<String, byte[]> cache = embeddedCacheManager.getCache(cacheName);
         return cache.getAdvancedCache();
     }
 

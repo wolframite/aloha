@@ -1,8 +1,6 @@
 package io.m18.aloha.config;
 
-import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -11,7 +9,9 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Wolfram Huesken <wolfram.huesken@zalora.com>
@@ -22,10 +22,7 @@ public class CacheConfig {
 
     private static final String CACHE_MODE_DISTRIBUTED = "DISTRIBUTED";
 
-    @Getter
     private GlobalConfiguration globalConfiguration;
-
-    @Getter
     private Configuration cacheConfiguration;
 
     // General cluster configuration
@@ -33,10 +30,6 @@ public class CacheConfig {
     private String clusterName;
 
     // Cache configuration
-    @Getter
-    @Value("${infinispan.cache.name}")
-    private String cacheName;
-
     @Value("${infinispan.cache.mode}")
     private CacheMode cacheMode;
 
@@ -52,6 +45,7 @@ public class CacheConfig {
     @Value("${infinispan.cache.stateTransferChunkSize}")
     private int stateTransferChunkSize;
 
+    @Value("${infinispan.cache.compatibility}")
     private boolean compatibility;
 
     @PostConstruct
@@ -68,21 +62,30 @@ public class CacheConfig {
         configureCache();
     }
 
+    @Bean
+    public GlobalConfiguration globalConfiguration() {
+        return globalConfiguration;
+    }
+
+    @Bean
+    public Configuration cacheConfiguration() {
+        return cacheConfiguration;
+    }
+
     private void configureCache() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-
         configurationBuilder
             .compatibility().enabled(compatibility)
-//            .clustering().cacheMode(cacheMode)
-//                .stateTransfer().chunkSize(stateTransferChunkSize)
-//            .locking()
-//                .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
-//                .concurrencyLevel(lockConcurrency)
+            .clustering().cacheMode(cacheMode)
+                .stateTransfer().chunkSize(stateTransferChunkSize)
+            .locking()
+                .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
+                .concurrencyLevel(lockConcurrency)
             .jmxStatistics().enable();
 
-//        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
-//            configurationBuilder.clustering().hash().numOwners(numOwners);
-//        }
+        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
+            configurationBuilder.clustering().hash().numOwners(numOwners);
+        }
 
         cacheConfiguration = configurationBuilder.build();
     }

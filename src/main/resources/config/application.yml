@@ -2,8 +2,7 @@
 infinispan:
   cluster:
     name: Kamehameha
-    statistics.enabled: true
-    jgroups.config:
+    network.address: 0.0.0.0
 
   cache:
     name: memcachedCache
@@ -16,12 +15,18 @@ infinispan:
       concurrency: 1024
 
 memcached:
+  enabled: false
   host: 0.0.0.0
-  idleTime: 2000
-  verbose: false
-  port:
-    primary : 11211
-    secondary: 11212
+  port: 11211
+  idleTime: -1
+  recvBufSize: 0
+  sendBufSize: 0
+  tcpNoDelay: true
+
+hotrod:
+  enabled: true
+  topologyLockTimeout: 30000 # ms
+  topologyReplTimeout: 30000 # ms
 
 server.port: 8080
 logging.level.root: INFO
