@@ -1,0 +1,4 @@
+#!/bin/bash
+mvn clean package
+JAR_FILE=`ls target/aloha-*.jar`
+java -server -Xms3g -Xmx3g -jar $JAR_FILE

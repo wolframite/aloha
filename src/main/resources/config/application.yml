@@ -1,21 +1,20 @@
 ---
 infinispan:
   cluster:
+    jgroups:
     name: Kamehameha
-    network.address: 0.0.0.0
 
   cache:
     name: memcachedCache
     mode: LOCAL
     numOwners: 3 # Amount of machines in the cluster storing the key
     stateTransferChunkSize: 128
-    compatibility: true
     lock:
       timeout: 30 # Lock acquisition timeout in seconds
       concurrency: 1024
 
 memcached:
-  enabled: false
+  enabled: true
   host: 0.0.0.0
   port: 11211
   idleTime: -1
@@ -24,9 +23,14 @@ memcached:
   tcpNoDelay: true
 
 hotrod:
-  enabled: true
+  enabled: false
+  host: 0.0.0.0
   topologyLockTimeout: 30000 # ms
   topologyReplTimeout: 30000 # ms
+
+socket:
+  enabled: false
+  path: /tmp/sockythesock.sock
 
 server.port: 8080
 logging.level.root: INFO

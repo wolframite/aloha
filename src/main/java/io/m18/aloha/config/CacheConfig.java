@@ -5,9 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.configuration.global.ShutdownHookBehavior;
+import org.infinispan.configuration.global.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -21,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfig {
 
     private static final String CACHE_MODE_DISTRIBUTED = "DISTRIBUTED";
+    private static final String CACHE_MODE_LOCAL = "LOCAL";
 
     private GlobalConfiguration globalConfiguration;
     private Configuration cacheConfiguration;
@@ -28,6 +27,9 @@ public class CacheConfig {
     // General cluster configuration
     @Value("${infinispan.cluster.name}")
     private String clusterName;
+
+    @Value("${infinispan.cluster.jgroups}")
+    private String jgroups;
 
     // Cache configuration
     @Value("${infinispan.cache.mode}")
@@ -45,19 +47,18 @@ public class CacheConfig {
     @Value("${infinispan.cache.stateTransferChunkSize}")
     private int stateTransferChunkSize;
 
-    @Value("${infinispan.cache.compatibility}")
-    private boolean compatibility;
-
     @PostConstruct
     public void init() {
         GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
-        gcb.transport()
-            .defaultTransport()
-            .clusterName(clusterName)
-            .globalJmxStatistics().enable();
 
-        gcb.shutdown().hookBehavior(ShutdownHookBehavior.REGISTER);
-        globalConfiguration = gcb.build();
+        if (!cacheMode.equals(CacheMode.LOCAL)) {
+            gcb.transport().defaultTransport()
+                .clusterName(clusterName);
+        }
+
+        globalConfiguration = gcb.globalJmxStatistics().enable()
+            .shutdown().hookBehavior(ShutdownHookBehavior.REGISTER)
+            .build();
 
         configureCache();
     }
@@ -75,16 +76,19 @@ public class CacheConfig {
     private void configureCache() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         configurationBuilder
-            .compatibility().enabled(compatibility)
+            .jmxStatistics().enable();
+
+        if (!cacheMode.equals(CacheMode.LOCAL)) {
+            configurationBuilder
             .clustering().cacheMode(cacheMode)
                 .stateTransfer().chunkSize(stateTransferChunkSize)
             .locking()
                 .lockAcquisitionTimeout(lockTimeout, TimeUnit.SECONDS)
-                .concurrencyLevel(lockConcurrency)
-            .jmxStatistics().enable();
+                .concurrencyLevel(lockConcurrency);
 
-        if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
-            configurationBuilder.clustering().hash().numOwners(numOwners);
+            if (cacheMode.friendlyCacheModeString().equals(CACHE_MODE_DISTRIBUTED)) {
+                configurationBuilder.clustering().hash().numOwners(numOwners);
+            }
         }
 
         cacheConfiguration = configurationBuilder.build();

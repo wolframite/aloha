@@ -1,0 +1,6 @@
+#!/bin/bash
+JAR_FILE=`ls target/aloha-*.jar`
+java -server -Xms2g -Xmx2g -Djava.net.preferIPv4=true -Djgroups.tcp.address=SITE_LOCAL \
+    -Dinfinispan.cluster.jgroups=/default-configs/default-jgroups-udp.xml \
+    -Dinfinispan.cache.mode=REPL_SYNC \
+    -Dserver.port=8081 -Dmemcached.port=11212 -jar $JAR_FILE

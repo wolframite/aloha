@@ -6,8 +6,8 @@ Pretty obvious, duh!
 
 ALOHA == z**ALO**ra jmemcac**H**ed infinisp**A**n
 
-> aloha replaces your traditional memcached setup (data and sessions) with a clusterable,
-HA memory grid, which still speaks and behaves like memcached
+> aloha replaces your traditional memcached setup with a clusterable, HA memory grid, which
+still speaks and behaves like memcached
 
 ## tl;dr &ndash; Give me Memcached!
 
@@ -19,12 +19,7 @@ This gives you a single local aloha instance with one memcached container listen
 
 The setup is built on top of these libraries:
 - Infinispan for the memory grid
-- jmemcached for the memcached frontend
 - spring-boot because it's great!
-
-We tried infinispan to use the infinispan server version first, because it comes with an activated memcached, but we
-found a bug, which made it impossible for us to use it. That was the reason we replaced it with jmemcached. You can
-read more about that here: https://github.com/zalora/jmemcached
 
 ## Configuration
 
@@ -35,103 +30,115 @@ aloha has 2 configuration files:
 
 ### bootstrap.yml
 
-Currently only the app name is defined here. If you wanted to add support for a config server, that would be the place to go.
+Currently only the app name is defined here. If you wanted to add support for a config server,
+that would be the place to go.
    
 ### config/application.yml
 
 This is the heart of aloha, you can configure nearly every aspect of the app. You can override every
-setting in the application.yml via command-line properties. If you don't like the cluster name (the default cluster name
-comes from the House of Kamehameha, a dynasty of Hawaiian Kings), start the app like that:
+setting in the application.yml via command-line properties, e.g. turn on the socket server:
 
-`java -Dinfinispan.cluster.name=whyWouldYouDoThat -jar aloha.jar`
+`java -Dsocket.enabled=true -jar aloha.jar`
 
 #### infinispan
 
 ```
 infinispan:
   cluster:
+    jgroups:
     name: Kamehameha
-    jgroups.config: 
-```
 
-By default `jgroups.config` is empty, but you can let it point to one of the jgroups.config 
-files, which come with infinispan: `/default-configs/default-jgroups-(tcp|udp|ec2|google|kubernetes).xml`
-
-If you want to use JDBC for coordination, check out the `jgroups-jdbc.xml` section. 
-
-We have two caches hardwired into the app:
-
-|            | Primary Cache                 | Secondary Cache  |
-|------------|-------------------------------|------------------|
-| Usage      | Generic memcached replacement | Sessions         |
-| Cache Mode | Distributed Async             | Distributed Sync |
-
-This is the commented configuration of the primary cache:
-
-```
-infinispan:
   cache:
-    primary:
-      name: main
-      
-      # Infinispan clustering modes: http://infinispan.org/docs/stable/user_guide/user_guide.html#clustering
-      mode: DIST_ASYNC
-      enabled: true
-    
-      compressor: com.zalora.aloha.compressor.Lz4
+    name: memcachedCache
+    mode: LOCAL
+    numOwners: 3 # Amount of machines in the cluster storing the key
+    stateTransferChunkSize: 128
+    lock:
+      timeout: 30 # Lock acquisition timeout in seconds
+      concurrency: 1024
 ```
 
-Aloha supports all cache modes infinispan offers, if you want to read more about that, have
-a look at the official documentation: http://infinispan.org/docs/stable/user_guide/user_guide.html#clustering
+By default Aloha is configured to provide a single local cache which can be accessed with the Memcached protocol.
+Internally infinispan uses a `Cache<String, byte[]>` type to store the data.
 
-Aloha comes with transparent LZ4-compression, the storage layer compresses the data field of the MemcachedItem
-before it's put in the cache. Before returning it to the memcached part of the application, the data is uncompressed,
-so the user doesn't have to do anything.
+If you let `jgroups` point to a jgroups file (Aloha comes with two:
+`/default-configs/default-jgroups-(tcp|udp).xml`), you can use the clustering features of
+infinispan, which is documented here: http://infinispan.org/docs/stable/user_guide/user_guide.html#clustering
 
-I will add a HotRod server endpoint soon, then the compression will be done in the client, so you have compressed
-transfer over the wire and everything is still transparent for the users.
+To start a `REPL_SYNC` cluster, you can run `./start-node1` and `./start-node2`.
 
 #### memcached
 
-Configures the memcached frontend for every cache defined in the infinispan section
+Since Infinispan 9.1.1, we can use the Memcached server, which comes with Infinispan again, because a bug we
+reported was fixed in this version.
 
 ```
 memcached:
-  host: 0.0.0.0 # Host to listen on
-  idleTime: 2000 # Connection timeout
-  verbose: false # Prints additional information to the console
-
-  # Port settings for the caches
-  port:
-    primary : 11211
-    secondary: 11212
+  enabled: true
+  host: 0.0.0.0
+  port: 11211
+  idleTime: -1
+  recvBufSize: 0
+  sendBufSize: 0
+  tcpNoDelay: true
 ```
 
-## Monitoring
+In theory you can configure the name of the cache to use, but unless it's set to "memcachedCache", the server fails
+to boot up. The configuration parameters in the application.yml represent the defaults of configuration-builder.
 
-All monitoring runs on the embedded untertow server, listening on `http://0.0.0.0:8090` by default.
-You can change this port in the `application.yml` (`server.port`).
+#### hotrod
+
+By default the hotrod server is disabled, it can be enabled via a cli parameter or by changing the config file
+directly. We increased the timeouts, because it solved problems we had on shitty networks. Like on AWS.
+
+```
+hotrod:
+  enabled: false
+  host: 0.0.0.0
+  topologyLockTimeout: 30000 # ms
+  topologyReplTimeout: 30000 # ms
+```
+
+#### socket
+
+We added a netty-based unix domain socket server to eliminate latency when the server is running on the same
+machine than the client.
+
+I'm sure there's plenty of potential for optimization, so PRs are welcome! The socket is read-only and it supports
+get and multi-get. Quick test on the cli using openbsd's netcat:
+
+**Single Get:**
+
+`echo mykey | nc -U /tmp/sockythesock.sock`
+
+The result of a single get is only the value.
+
+**Multi Get:**
+
+`echo "mykey1 mykey2" | nc -U /tmp/sockythesock.sock`
+
+The result of a multi-get is a bit more verbose:
+
+```
+mykey1
+myvalue1
+mykey2
+myvalue2
+```
+
+Configuration is self-explaning:
+
+```
+socket:
+  enabled: false
+  path: /tmp/sockythesock.sock
+```
 
 ### Health
 
 For now we only have the health overview provided by spring at `/health`, which shows you if the system is up or
-not and the memory usage.
+not.
 
 ### Jolokia
 
 For some more insight into the system and the cluster status, you can query jolokia at `/jolokia`
-
-### Statistics
-
-To enable the global statistics, either modify the application.yml:
-
-```
-infinispan:
-  cluster:
-    name: Kamehameha
-    statistics.enabled: true
-```
-
-or start aloha with the flag `-Dinfinispan.cluster.statistics.enabled=true`
-
-Cache statistics are always enabled.

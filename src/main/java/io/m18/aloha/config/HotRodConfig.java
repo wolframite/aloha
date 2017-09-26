@@ -11,7 +11,7 @@ public class HotRodConfig {
     @Value("${infinispan.cache.name}")
     private String cacheName;
 
-    @Value("${infinispan.cluster.network.address}")
+    @Value("${hotrod.host}")
     private String networkAddress;
 
     @Value("${hotrod.topologyLockTimeout}")

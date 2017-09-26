@@ -14,9 +14,6 @@ import javax.annotation.PostConstruct;
 @Component
 public class MemcachedConfig {
 
-    @Value("${infinispan.cache.name}")
-    private String cacheName;
-
     @Value("${memcached.host}")
     private String host;
 
@@ -40,9 +37,7 @@ public class MemcachedConfig {
     @PostConstruct
     public void init() {
         MemcachedServerConfigurationBuilder builder = new MemcachedServerConfigurationBuilder();
-
         memcachedServerConfiguration = builder
-            .name(cacheName)
             .host(host)
             .port(port)
             .idleTimeout(idleTime)
