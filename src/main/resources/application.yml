@@ -1,4 +1,8 @@
 ---
+spring:
+  application:
+    name: aloha
+
 infinispan:
   cluster:
     jgroups:
@@ -22,17 +26,5 @@ memcached:
   sendBufSize: 0
   tcpNoDelay: true
 
-hotrod:
-  enabled: false
-  host: 0.0.0.0
-  topologyLockTimeout: 30000 # ms
-  topologyReplTimeout: 30000 # ms
-
-socket:
-  enabled: false
-  path: /tmp/sockythesock.sock
-
 server.port: 8080
 logging.level.root: INFO
-management.security.enabled: false
-endpoints.shutdown.enabled: true

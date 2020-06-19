@@ -56,7 +56,7 @@ public class CacheConfig {
                 .clusterName(clusterName);
         }
 
-        globalConfiguration = gcb.globalJmxStatistics().enable()
+        globalConfiguration = gcb.jmx().enable()
             .shutdown().hookBehavior(ShutdownHookBehavior.REGISTER)
             .build();
 
@@ -75,8 +75,7 @@ public class CacheConfig {
 
     private void configureCache() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-        configurationBuilder
-            .jmxStatistics().enable();
+        configurationBuilder.statistics().enable();
 
         if (!cacheMode.equals(CacheMode.LOCAL)) {
             configurationBuilder
